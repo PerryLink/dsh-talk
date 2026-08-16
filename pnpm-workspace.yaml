@@ -1,0 +1,14 @@
+# Nearest-workspace root for this standalone plugin package. This file makes
+# pnpm treat dsh-talk as an independent workspace when the repository is
+# checked out next to (or inside) other pnpm workspaces, such as a
+# deepseek-harness checkout.
+packages:
+  - .
+
+# pnpm 11 runs installs with dependency build scripts ignored by default
+# (ERR_PNPM_IGNORED_BUILDS); the builds below are required for this package
+# (esbuild: tsdown bundling; node-pty: the subprocess peer's PTY backend).
+allowBuilds:
+  esbuild: true
+  node-pty: true
+  '@deepseek-ai/dsh-subprocess-local': true
