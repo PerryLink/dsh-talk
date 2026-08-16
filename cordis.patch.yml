@@ -1,0 +1,90 @@
+# dsh-talk bundle patch: mount the voice-first session loop.
+#
+# Every key below is a Config field (Schemastery schema); invalid values fail
+# the profile load loudly. See README.md "Configuration" for the full table.
+- insert:
+    - id: talk
+      name: dsh-talk
+      config:
+        # Composer microphone button behavior.
+        record:
+          # Show the mic button and allow recording.
+          enabled: true
+          # Optional toggle hotkey such as "alt+r"; unset = click only.
+          hotkey: null
+          # Recording cap in seconds (1..600).
+          maxSeconds: 60
+          # Submit the transcription as the user message (false = fill the draft).
+          autoSubmit: false
+        # Speech-to-text.
+        stt:
+          # auto | web | funasr | whisper — auto prefers a configured local
+          # engine, then the browser's Web Speech.
+          engine: auto
+          # BCP-47 language such as "en-US", or "auto".
+          language: auto
+          # Show interim transcriptions (Web Speech only).
+          interim: true
+          # FunASR HTTP inference server (used when engine resolves to funasr).
+          funasr:
+            # Full inference endpoint URL; required for the funasr engine.
+            url: ''
+            # Model name sent to the server; unset = server default.
+            model: ''
+          # whisper.cpp local engine (used when engine resolves to whisper).
+          whisper:
+            # whisper.cpp executable.
+            command: whisper-cli
+            # Model file path; required for the whisper engine.
+            modelPath: ''
+            # Language override; unset = the global stt.language or auto-detect.
+            language: ''
+        # Text-to-speech.
+        tts:
+          # auto | browser | edge-tts | piper — auto prefers piper (configured
+          # model), then edge-tts, then the browser voice.
+          engine: auto
+          # Voice name override; unset = engine default.
+          voice: ''
+          # Rate offset in percent (-50..50) for edge-tts/piper.
+          rate: 0
+          # Fall back to the browser voice when a local engine fails.
+          fallbackToBrowser: true
+          browser:
+            # Preferred SpeechSynthesis voice name; unset = platform default.
+            voiceName: ''
+            # SpeechSynthesis rate 0.1..10.
+            rate: 1
+            # SpeechSynthesis pitch 0..2.
+            pitch: 1
+          edgeTts:
+            # edge-tts executable.
+            command: edge-tts
+            # Azure neural voice name.
+            voice: en-US-JennyNeural
+          piper:
+            # piper executable.
+            command: piper
+            # piper voice model file; required for the piper engine.
+            modelPath: ''
+        # Event announcements.
+        announce:
+          # Master switch for all event announcements.
+          enabled: true
+          # Announce turn completion.
+          onTurnEnd: true
+          # Announce pending approvals.
+          onApproval: true
+          # Announce errors.
+          onError: true
+          # Spoken phrases.
+          messages:
+            turnEnd: Turn complete.
+            approval: Approval required.
+            error: Something went wrong.
+        # Starting to talk interrupts current playback.
+        interrupt: true
+        # Cap on the speak tool's text length in characters (1..100000).
+        maxSpeakChars: 20000
+        # In-memory synthesized-audio cache cap in bytes (1048576..67108864).
+        maxAudioCacheBytes: 8388608
