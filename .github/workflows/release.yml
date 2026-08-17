@@ -55,7 +55,7 @@ jobs:
           if npm view "dsh-talk@${version}" version >/dev/null 2>&1; then
             echo "dsh-talk@${version} is already published; skipping npm publish"
           else
-            npm publish --provenance --access public
+            npm publish --access public
           fi
 
   release:
