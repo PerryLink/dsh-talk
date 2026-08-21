@@ -24,7 +24,7 @@
 
 | 方面 | 状态 |
 |---|---|
-| Harness | DeepSeek Harness `0.1.0-rc.6` |
+| Harness | DeepSeek Harness `0.1.0-rc.8` |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | 浏览器 | Web Speech + MediaRecorder（Chrome/Edge 最佳）；其余场景用宿主侧转写/TTS 引擎 |
 
@@ -135,7 +135,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 ```sh
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc：src + tests，对照本地 harness checkout
-pnpm run typecheck:ci  # tsc：对照已发布的 0.1.0-rc.6 类型（无 paths）
+pnpm run typecheck:ci  # tsc：对照已发布的 0.1.0-rc.8 类型（无 paths）
 pnpm test           # vitest：45 个测试、7 个套件
 pnpm run build      # tsc 声明 + tsdown bundle（lib/）
 pnpm run verify:self-contained  # 依赖声明全部来自 registry

@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-08-21
+
+### Changed
+
+- Upgraded every `@deepseek-ai/dsh-*` peer/devDependency to `0.1.0-rc.8`; the peer range is now `>=0.1.0-rc.8 <0.2.0`. No source changes were required: the two-argument `Session.append` form, `defineTool`, the `talk:speech` projection registration, and the `conversation.input.left` / `settings.plugins.tab` client slots are unchanged in rc.8.
+
 ## [0.1.0] - 2026-08-16
 
 - Initial release: voice-first session loop with a composer microphone button, browser/local speech-to-text, the speak tool for text-to-speech replies, event announcements, and speak-to-interrupt.

@@ -14,12 +14,12 @@ Standalone DeepSeek Harness plugin repository (`dsh-talk`). Development follows 
 - `src/settings-patch.ts` — append-only profile-patch write-back with timestamped backups (settings tab saves).
 - `src/sanitize.ts` — display redaction: sk-* keys, the Authorization bearer header (label preserved), bare Bearer tokens, key=value credentials, JWTs; temp-path and control-character handling. Pattern ORDER is load-bearing: header form before bare form, key-list excludes `authorization`.
 - `src/client/` — browser half: `$mount` the Remote contribution, register the mic button in `conversation.input.left` (id `talk-mic`) and the settings tab (`settings.plugins.tab`, id `talk`); pure presenter (`present.ts`), inline scoped stylesheet (standalone bundles cannot use the in-repo CSS-module pipeline), en/zh dictionaries.
-- `tests/` — vitest; real `Context` + `Session`/`ToolRuntime`/`SessionProjectionRegistry` from the `0.1.0-rc.6` peers; the subprocess provider is scripted (a subclass of the REAL `SubprocessRuntime`); browser-only surfaces (MediaRecorder/Web Speech) are feature-detected and covered through the pure presenter/state machine.
+- `tests/` — vitest; real `Context` + `Session`/`ToolRuntime`/`SessionProjectionRegistry` from the `0.1.0-rc.8` peers; the subprocess provider is scripted (a subclass of the REAL `SubprocessRuntime`); browser-only surfaces (MediaRecorder/Web Speech) are feature-detected and covered through the pure presenter/state machine.
 
 ## Hard rules applied here
 
 - **Waterfall discipline.** The `approval/request` announcement listener always calls `next()` and never blocks the gate; the announcement is fire-and-forget speech.
-- **Model-visible ⟺ logged.** The model sees only the `speak` tool's canonical value and render text; every utterance lands in the session log as `dsh-talk/speech` (two-argument `Session.append` — rc.6 has no envelope option). Audio bytes stay in the in-memory cache and cross only the `talk/audio` endpoint.
+- **Model-visible ⟺ logged.** The model sees only the `speak` tool's canonical value and render text; every utterance lands in the session log as `dsh-talk/speech` (two-argument `Session.append` — rc.8's optional envelope applies to surface events only). Audio bytes stay in the in-memory cache and cross only the `talk/audio` endpoint.
 - **Sanitized everything.** All display/log surfaces pass `sanitizeText`/`redactSecrets`/`displayPath`; credentials, JWTs, and temp audio paths never leak into presentation.
 - **Fail loud.** `resolveConfig` re-validates bounds and cross-field engine requirements; the loader's Schemastery pass validates the schema itself. (Raw `ctx.plugin` mounts in tests swallow async apply rejections — the two documented fail-loud layers are the schema and `resolveConfig`.)
 - **Effect-owning lifecycles.** Every registration (service, tool, projection, listeners) rides the plugin fiber; client registrations ride the client plugin fiber and `$mount` owns the Remote namespace.
@@ -31,7 +31,7 @@ Standalone DeepSeek Harness plugin repository (`dsh-talk`). Development follows 
 
 ## Checks
 
-`pnpm run typecheck && pnpm run typecheck:ci && pnpm test && pnpm run build && pnpm run verify:self-contained && pnpm run verify:artifacts && pnpm pack`. The plain `typecheck` resolves the local checkout through tsconfig `paths`; `typecheck:ci` resolves the npm-published `0.1.0-rc.6` faces — keep both green.
+`pnpm run typecheck && pnpm run typecheck:ci && pnpm test && pnpm run build && pnpm run verify:self-contained && pnpm run verify:artifacts && pnpm pack`. The plain `typecheck` resolves the local checkout through tsconfig `paths`; `typecheck:ci` resolves the npm-published `0.1.0-rc.8` faces — keep both green.
 
 ## Docs
 
