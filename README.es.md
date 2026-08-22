@@ -24,7 +24,7 @@
 
 | Superficie | Estado |
 |---|---|
-| Harness | DeepSeek Harness `0.1.0-rc.8` |
+| Harness | DeepSeek Harness `0.1.1-rc.2` |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Navegador | Web Speech + MediaRecorder (mejor en Chrome/Edge); motores de transcripción/TTS del host para el resto |
 
@@ -126,7 +126,7 @@ Todos los ajustes son campos `Config` de Schemastery (modificables desde cordis.
 ```sh
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests contra el checkout local del harness
-pnpm run typecheck:ci  # tsc contra los tipos publicados 0.1.0-rc.8 (sin paths)
+pnpm run typecheck:ci  # tsc contra los tipos publicados 0.1.1-rc.2 (sin paths)
 pnpm test           # vitest: 45 tests, 7 suites
 pnpm run build      # declaraciones tsc + bundles tsdown (lib/)
 pnpm run verify:self-contained  # las specs de dependencias resuelven desde el registry

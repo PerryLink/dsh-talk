@@ -25,7 +25,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.0-rc.8` |
+| Harness | DeepSeek Harness `0.1.1-rc.2` |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Browser | Web Speech + MediaRecorder (Chrome/Edge best); host transcription/TTS engines for the rest |
 
@@ -136,7 +136,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 ```sh
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests against the local harness checkout
-pnpm run typecheck:ci  # tsc against the published 0.1.0-rc.8 types (no paths)
+pnpm run typecheck:ci  # tsc against the published 0.1.1-rc.2 types (no paths)
 pnpm test           # vitest: 45 tests, 7 suites
 pnpm run build      # tsc declarations + tsdown bundles (lib/)
 pnpm run verify:self-contained  # dependency specs resolve from the registry

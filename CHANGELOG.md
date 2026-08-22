@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-08-22
+
+### Changed
+
+- Upgraded every `@deepseek-ai/dsh-*` devDependency to `0.1.1-rc.2`; the peer range stays `>=0.1.0-rc.8 <0.2.0`.
+- Moved the `talk:speech` projection registration onto the rc.2 `register` contract: `stateSchema` plus `wire.viewSchema`/`wire.view`, and merge `SessionProjectionStateMap` alongside `SessionProjectionMap`.
+
 ## [0.1.1] - 2026-08-21
 
 ### Changed
