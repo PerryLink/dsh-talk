@@ -63,4 +63,7 @@ declare module '@deepseek-ai/dsh-session-projection/types' {
   interface SessionProjectionMap {
     'talk:speech': TalkSpeechProjection | null
   }
+  interface SessionProjectionStateMap {
+    'talk:speech': TalkSpeechProjectionState
+  }
 }

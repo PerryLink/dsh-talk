@@ -76,10 +76,13 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   ctx.inject(['sessionProjections'], (projectionCtx) => {
     projectionCtx.effect(() => projectionCtx.sessionProjections.register<'talk:speech', ReturnType<typeof initTalkSpeechProjection>>({
       key: 'talk:speech',
-      schema: talkSpeechProjectionSchema,
+      stateSchema: talkSpeechProjectionSchema,
       init: initTalkSpeechProjection,
       apply: applyTalkSpeechProjection,
-      view: viewTalkSpeechProjection,
+      wire: {
+        viewSchema: talkSpeechProjectionSchema,
+        view: viewTalkSpeechProjection,
+      },
       stateVersion: TALK_SPEECH_PROJECTION_STATE_VERSION,
     }), 'dsh-talk: talk:speech projection')
   })
