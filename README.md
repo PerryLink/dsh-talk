@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🎙️ dsh-talk
+[![Gitee](https://img.shields.io/badge/Gitee-mirror-c71d23?logo=gitee)](https://gitee.com/perrylink/dsh-talk)
 
 **Voice-first session loop for DeepSeek Harness: talk to it, hear it answer.**
 
