@@ -41,7 +41,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Sanitizer ordering: the Authorization bearer header keeps its label; sk-* tokens keep their prefix.
 - Client bundle follows the shell's ModuleLoader handshake; zod is inlined into both halves.
-
-## [0.1.0] - 2026-08-17
-
-- Initial release: voice-first session loop for DeepSeek Harness.
