@@ -14,6 +14,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '../projection.ts'
 import { foldMic, initMic, type MicViewModel } from './present.ts'
+import { selectBrowserVoice } from './browserVoice.ts'
+import { MicIcon, MicSpinnerIcon, MicStopIcon } from './MicIcon.tsx'
 import type { TalkAudio, TalkInterruptResult, TalkStatus, TalkTranscript } from '../wire.ts'
 
 /** Registration-side injected face: the recorder's host/browser bindings. */
@@ -30,10 +32,22 @@ export interface TalkMicInjected {
   setDraft: (text: string) => void
   /** Send the transcription as a user message. */
   send: (text: string) => Promise<void>
+  /**
+   * Resolve the current master input facade for one session id through
+   * `sessions.scope(id)` + `conversation.input.for(actx)`; undefined when
+   * either service is unavailable (rc.8 builds without the scope exchange).
+   */
+  forSession?: (id: unknown) => { setDraft(text: string): void; submit(): void } | undefined
 }
 
 /** Full component props assembled by the input-slot renderer. */
 export type TalkMicProps = PropsRuntime<'conversation.input.left'> & InjectFace<TalkMicInjected>
+
+/** Structural face of the standard-kit input actions current master feeds every session-scope slot component. */
+interface RuntimeInputActions {
+  setDraft(text: string): void
+  submit(): void
+}
 
 /** Minimal structural face of the Web Speech API (Chrome/Edge). */
 interface SpeechRecognitionLike {
@@ -84,7 +98,36 @@ function supportedMime(): string | undefined {
  * @returns the button element.
  */
 export function TalkMicButton(props: TalkMicProps): ReactNode {
-  const { status, interrupt, transcribe, audio, setDraft, send, useProjection } = props
+  const { status, interrupt, transcribe, audio, setDraft, send, useProjection, forSession } = props
+  const inputActions = (props as Partial<Record<'inputActions', RuntimeInputActions>>).inputActions
+  const sessionIdProp = (props as Partial<Record<'sessionId', unknown>>).sessionId
+  const writeDraft = (text: string): void => {
+    if (inputActions !== undefined) {
+      inputActions.setDraft(text)
+      return
+    }
+    const facade = sessionIdProp !== undefined ? forSession?.(sessionIdProp) : undefined
+    if (facade !== undefined) {
+      facade.setDraft(text)
+      return
+    }
+    console.warn('[dsh-talk] falling back to rc.8 injected setDraft')
+    setDraft(text)
+  }
+  const submitText = async (text: string): Promise<void> => {
+    if (inputActions !== undefined) {
+      inputActions.setDraft(text)
+      inputActions.submit()
+      return
+    }
+    const facade = sessionIdProp !== undefined ? forSession?.(sessionIdProp) : undefined
+    if (facade !== undefined) {
+      facade.setDraft(text)
+      facade.submit()
+      return
+    }
+    await send(text)
+  }
   const [mic, setMic] = useState<MicViewModel>(initMic)
   const [recording, setRecording] = useState(false)
   const [settings, setSettings] = useState<TalkStatus | undefined>(undefined)
@@ -115,9 +158,9 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     setMic(foldMic(micRef.current, trimmed === '' ? { kind: 'failed', message: 'empty transcription' } : { kind: 'transcribed', text: trimmed }))
     if (trimmed === '') return
     if (settingsRef.current?.record.autoSubmit === true) {
-      void send(trimmed)
+      void submitText(trimmed)
     } else {
-      setDraft(trimmed)
+      writeDraft(trimmed)
     }
   }
 
@@ -156,30 +199,79 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     if (snapshot.interrupt) void interrupt()
     const recognition = webRecognition()
     if (recognition !== undefined) {
-      recognition.lang = snapshot.stt.language === 'auto' ? '' : snapshot.stt.language
+      // An 'auto' language must not assign the empty string: Chrome handles
+      // '' badly on some setups (observed as a silent immediate no-speech).
+      // Fall back to the browser locale instead.
+      const lang = snapshot.stt.language === 'auto'
+        ? (navigator.language || 'en-US')
+        : snapshot.stt.language
+      recognition.lang = lang
       recognition.interimResults = true
-      recognition.continuous = false
+      // Dictation spans spoken pauses ("Testing, 1, 2, 3"): one-shot mode
+      // finalises at the first perceived sentence end and silently drops the
+      // rest. Stay continuous until the user presses stop.
+      recognition.continuous = true
       recognition.maxAlternatives = 1
-      let finalText = ''
-      recognition.onresult = (event) => {
-        let interim = ''
-        for (let index = event.resultIndex; index < event.results.length; index += 1) {
-          const result = event.results[index]!
-          const text = result[0]?.transcript ?? ''
-          if (index === event.results.length - 1) interim += text
-          else finalText += text
+      let lastFull = ''
+      let recognitionFailed = false
+      // Auto-finalise: continuous mode stays hot across spoken pauses, so a
+      // quiet gap longer than the configured window ends the utterance the way
+      // one-shot mode would have — without dropping anything already spoken.
+      // The timer re-arms on every result; firing calls stop(), whose onend
+      // performs the single final write.
+      // The field rides talk/status; an older host build omits it, so fall
+      // back here instead of arming a zero-delay timer.
+      const silenceFinaliseMs = (snapshot as { stt?: { silenceFinaliseMs?: number } }).stt?.silenceFinaliseMs ?? 4000
+      let silenceTimer: ReturnType<typeof setTimeout> | null = null
+      const clearSilence = (): void => {
+        if (silenceTimer !== null) {
+          clearTimeout(silenceTimer)
+          silenceTimer = null
         }
-        if (interim !== '') setDraft(interim)
+      }
+      const armSilence = (): void => {
+        clearSilence()
+        silenceTimer = setTimeout(() => {
+          silenceTimer = null
+          if (recognitionRef.current !== recognition) return
+          try {
+            recognition.stop()
+          } catch {
+            // The recognizer already ended; onend handled finalisation.
+          }
+        }, silenceFinaliseMs)
+      }
+      armSilence()
+      // Web Speech re-reports the whole results collection on every event, so
+      // rebuild the complete transcript from index 0 each time instead of
+      // accumulating fragments across events (an accumulator duplicates text
+      // whenever a result is revised or re-finalised).
+      const buildTranscript = (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }): string => {
+        const parts: string[] = []
+        for (let index = 0; index < event.results.length; index += 1) {
+          const text = event.results[index]?.[0]?.transcript ?? ''
+          if (text.trim() !== '') parts.push(text.trim())
+        }
+        return parts.join(' ')
+      }
+      recognition.onresult = (event) => {
+        lastFull = buildTranscript(event)
+        armSilence()
+        if (lastFull !== '') writeDraft(lastFull)
       }
       recognition.onend = () => {
+        clearSilence()
         recognitionRef.current = null
         setRecording(false)
-        finishWithText(finalText)
+        if (!recognitionFailed) finishWithText(lastFull)
       }
-      recognition.onerror = () => {
+      recognition.onerror = (event) => {
+        clearSilence()
+        recognitionFailed = true
         recognitionRef.current = null
         setRecording(false)
-        setMic(foldMic(micRef.current, { kind: 'failed', message: 'web speech recognition failed' }))
+        console.warn(`[dsh-talk] speech recognition error: ${String(event.error ?? 'unknown')}`)
+        setMic(foldMic(micRef.current, { kind: 'failed', message: `web speech recognition failed (${String(event.error ?? 'unknown')})` }))
       }
       recognitionRef.current = recognition
       try {
@@ -279,7 +371,15 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     if (speech.engine === 'browser') {
       if (typeof speechSynthesis !== 'undefined') {
         const utterance = new SpeechSynthesisUtterance(speech.text)
+        // Named voice when configured or overridden per call; an unmatched or
+        // unset name keeps the platform default. Rate/pitch ride the event.
+        const voice = selectBrowserVoice(speechSynthesis.getVoices(), speech.voice)
+        if (voice !== undefined) utterance.voice = voice
+        if (speech.rate !== undefined) utterance.rate = speech.rate
+        if (speech.pitch !== undefined) utterance.pitch = speech.pitch
         speechSynthesis.speak(utterance)
+      } else {
+        console.warn('[dsh-talk] speechSynthesis unavailable')
       }
       return
     }
@@ -296,14 +396,23 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
   }, [speech, audio])
 
   const disabled = settings === undefined || settings.record.enabled !== true
-  const label = recording
-    ? (mic.phase === 'transcribing' ? '…' : '⏹')
-    : '🎙'
+  const transcribing = recording && mic.phase === 'transcribing'
+  // "Ready": a transcript landed in the draft (autoSubmit off) and has not
+  // been re-recorded over yet — foldMic's 'transcribed' case returns to
+  // phase 'idle' with lastText populated, so idle-with-text is the signal.
+  const ready = !recording && mic.phase === 'idle' && mic.lastText !== ''
+  const icon = transcribing
+    ? <MicSpinnerIcon size={22} />
+    : recording
+      ? <MicStopIcon size={22} />
+      : <MicIcon size={22} />
   return (
     <button
       type="button"
       data-dsh-talk-mic
       data-recording={recording ? 'true' : 'false'}
+      data-transcribing={transcribing ? 'true' : 'false'}
+      data-ready={ready ? 'true' : 'false'}
       data-disabled={disabled ? 'true' : 'false'}
       title={mic.phase === 'error' ? mic.error : undefined}
       disabled={disabled}
@@ -312,7 +421,7 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
         else start()
       }}
     >
-      {label}
+      {icon}
     </button>
   )
 }

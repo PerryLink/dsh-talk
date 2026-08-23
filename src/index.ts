@@ -74,14 +74,26 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   // The `talk:speech` projection unit: last-wins fold of spoken utterances,
   // read by the web client's record button through useProjection.
   ctx.inject(['sessionProjections'], (projectionCtx) => {
-    projectionCtx.effect(() => projectionCtx.sessionProjections.register<'talk:speech', ReturnType<typeof initTalkSpeechProjection>>({
-      key: 'talk:speech',
+    // The current harness gates client emission on the unit's `wire` field;
+    // the published 0.1.0-rc.8 peer predates it (its drive reads the
+    // top-level `view`). Attach `wire` structurally so both faces typecheck
+    // while the running registry gets the field it reads. Without it the
+    // unit folds and persists but clients never receive change frames.
+    const definition = {
+      key: 'talk:speech' as const,
       schema: talkSpeechProjectionSchema,
       init: initTalkSpeechProjection,
       apply: applyTalkSpeechProjection,
       view: viewTalkSpeechProjection,
       stateVersion: TALK_SPEECH_PROJECTION_STATE_VERSION,
-    }), 'dsh-talk: talk:speech projection')
+    }
+    const wired = Object.assign(definition, {
+      wire: {
+        viewSchema: talkSpeechProjectionSchema,
+        view: viewTalkSpeechProjection,
+      },
+    })
+    projectionCtx.effect(() => projectionCtx.sessionProjections.register<'talk:speech', ReturnType<typeof initTalkSpeechProjection>>(wired), 'dsh-talk: talk:speech projection')
   })
 
   // Turn-completion announcement: idle after an observed running transition.

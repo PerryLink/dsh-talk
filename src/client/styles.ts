@@ -12,27 +12,64 @@ export function installTalkStyles(): () => void {
   style.dataset['dshTalkStyles'] = '1'
   style.textContent = `
     [data-dsh-talk-mic] {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      border: 1px solid transparent;
-      border-radius: 6px;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: none;
+      border-radius: 8px;
       background: transparent;
       cursor: pointer;
-      font: inherit;
-      color: inherit;
+      color: var(--dsw-alias-brand-primary, #e0302f);
+      transition: background-color 120ms ease, color 120ms ease;
     }
     [data-dsh-talk-mic]:hover {
-      background: rgba(127, 127, 127, 0.12);
-    }
-    [data-dsh-talk-mic][data-recording='true'] {
-      border-color: #d33;
-      color: #d33;
+      background: rgba(224, 48, 47, 0.12);
     }
     [data-dsh-talk-mic][data-disabled='true'] {
-      opacity: 0.45;
+      opacity: 0.4;
       cursor: default;
+    }
+    /* Recording: brighter red, glyph pulses to read as "live". */
+    [data-dsh-talk-mic][data-recording='true'] {
+      color: #ff4d4d;
+    }
+    [data-dsh-talk-mic][data-recording='true'] svg {
+      animation: dsh-talk-pulse 1.1s ease-in-out infinite;
+    }
+    /* Transcribing: the ring spinner supplies its own motion — no pulse. */
+    [data-dsh-talk-mic][data-transcribing='true'] svg {
+      animation: dsh-talk-spin 0.9s linear infinite;
+    }
+    /* Ready: a transcript is sitting in the draft, unsent. A small amber dot
+       — a different accent family from the red mic — flags it needs a
+       glance, without implying "recording" (red) or "error". */
+    [data-dsh-talk-mic][data-ready='true']::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ffb020;
+      box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.4);
+    }
+    @keyframes dsh-talk-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.55; transform: scale(1.12); }
+    }
+    @keyframes dsh-talk-spin {
+      to { transform: rotate(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      [data-dsh-talk-mic][data-recording='true'] svg,
+      [data-dsh-talk-mic][data-transcribing='true'] svg {
+        animation: none;
+      }
     }
     [data-dsh-talk-settings] {
       display: flex;

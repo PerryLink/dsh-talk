@@ -11,6 +11,7 @@
 
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
+import { writeFile } from 'node:fs/promises'
 import SessionStore, { SessionId, type Session } from '@deepseek-ai/dsh-session'
 import {
   SubprocessRuntime,
@@ -31,6 +32,8 @@ export class FakeSubprocessRuntime extends SubprocessRuntime {
   nextExitCode = 0
   /** Scripted stderr text for the next spawn. */
   nextStderr = ''
+  /** When set, a spawn whose argv carries `--write-media <path>` writes these bytes there (successful local synthesis). */
+  nextSynthBytes: string | null = null
   /** Every spawn spec recorded. */
   spawns: SubprocessSpawnSpec[] = []
 
@@ -44,6 +47,12 @@ export class FakeSubprocessRuntime extends SubprocessRuntime {
 
   spawn(spec: SubprocessSpawnSpec): SubprocessHandle {
     this.spawns.push(spec)
+    if (this.nextSynthBytes !== null) {
+      const marker = spec.argv.indexOf('--write-media')
+      if (marker !== -1 && marker + 1 < spec.argv.length) {
+        void writeFile(spec.argv[marker + 1] as string, this.nextSynthBytes, 'binary').catch(() => {})
+      }
+    }
     const stdout = this.nextStdout
     const stderr = this.nextStderr
     const exitCode = this.nextExitCode
@@ -114,7 +123,11 @@ export async function mountHarness(config: Record<string, unknown> = {}): Promis
   session.append('turn/start', { turn: 1 })
   ctx.provide('systemPrompt', { tools: () => () => undefined, section: () => () => undefined } as never)
   await ctx.plugin(ToolRuntime)
-  await ctx.plugin(SessionProjectionRegistry)
+  // Direct construction binds the registry's own `session/event` listener to
+  // THIS context; `ctx.plugin()` would mount it on a child scope whose
+  // listener never sees root-emitted session events (production resolves the
+  // service at composition level).
+  new SessionProjectionRegistry(ctx)
   // `SubprocessRuntime` is a Cordis Service: construction self-registers.
   new FakeSubprocessRuntime(ctx)
 

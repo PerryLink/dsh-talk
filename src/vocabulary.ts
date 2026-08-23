@@ -35,6 +35,12 @@ export interface DshTalkSpeechEvent {
   error?: string | undefined
   /** True when the user interrupted the utterance before it finished. */
   interrupted?: boolean | undefined
+  /** Browser voice name in force for this utterance (browser engine only); absent = platform default. */
+  voice?: string | undefined
+  /** SpeechSynthesis rate for browser playback; absent for local engines. */
+  rate?: number | undefined
+  /** SpeechSynthesis pitch for browser playback; absent for local engines. */
+  pitch?: number | undefined
 }
 
 /** The wire payload of the `talk:speech` projection. */
@@ -55,6 +61,12 @@ export interface TalkSpeechProjection {
   error?: string | undefined
   /** True when the utterance was interrupted. */
   interrupted?: boolean | undefined
+  /** Browser voice name in force for this utterance (browser engine only); absent = platform default. */
+  voice?: string | undefined
+  /** SpeechSynthesis rate for browser playback; absent for local engines. */
+  rate?: number | undefined
+  /** SpeechSynthesis pitch for browser playback; absent for local engines. */
+  pitch?: number | undefined
 }
 
 /** Strict schema validating the projection value before it leaves the host. */
@@ -67,4 +79,7 @@ export const talkSpeechProjectionSchema = z.object({
   reason: z.union([z.literal('speak-tool'), z.literal('turn-end'), z.literal('approval'), z.literal('error')]),
   error: z.string().optional(),
   interrupted: z.boolean().optional(),
+  voice: z.string().optional(),
+  rate: z.number().min(0.1).max(10).optional(),
+  pitch: z.number().min(0).max(2).optional(),
 })

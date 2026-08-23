@@ -168,7 +168,7 @@ export class TalkService extends TypertRemoteService {
     const utteranceId = randomUUID()
 
     if (engine === 'browser') {
-      const event = this.speechEvent(utteranceId, 'browser', spoken, 0, options.reason)
+      const event = this.speechEvent(utteranceId, 'browser', spoken, 0, options.reason, undefined, undefined, this.browserDelivery(options.voice))
       this.appendSpeechEvent(options.session, event)
       return { spoken: true, engine: 'browser', audioBytes: 0, utteranceId }
     }
@@ -191,7 +191,7 @@ export class TalkService extends TypertRemoteService {
         return { spoken: false, engine: localEngine, audioBytes: 0, error: 'interrupted', utteranceId }
       }
       if (this.resolved.ttsFallbackToBrowser) {
-        this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, 'browser', spoken, 0, options.reason, failure.message))
+        this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, 'browser', spoken, 0, options.reason, failure.message, undefined, this.browserDelivery(options.voice)))
         return {
           spoken: true,
           engine: 'browser',
@@ -216,6 +216,7 @@ export class TalkService extends TypertRemoteService {
     reason: SpeechReason,
     error?: string,
     interrupted?: boolean,
+    browserDelivery?: { voice?: string; rate: number; pitch: number },
   ): DshTalkSpeechEvent {
     return {
       kind: 'tts',
@@ -226,6 +227,26 @@ export class TalkService extends TypertRemoteService {
       reason,
       ...(error !== undefined ? { error } : {}),
       ...(interrupted === true ? { interrupted: true } : {}),
+      ...(browserDelivery !== undefined ? {
+        ...(browserDelivery.voice !== undefined ? { voice: browserDelivery.voice } : {}),
+        rate: browserDelivery.rate,
+        pitch: browserDelivery.pitch,
+      } : {}),
+    }
+  }
+
+  /**
+   * Browser delivery settings for one utterance: the per-call `voice` override
+   * wins over the configured `tts.browser.voiceName`; rate/pitch always ride
+   * along so the client needs no settings round-trip at playback time.
+   */
+  private browserDelivery(voiceOverride?: string): { voice?: string; rate: number; pitch: number } {
+    return {
+      ...(voiceOverride !== undefined
+        ? { voice: voiceOverride }
+        : this.resolved.browserVoiceName !== null ? { voice: this.resolved.browserVoiceName } : {}),
+      rate: this.resolved.browserRate,
+      pitch: this.resolved.browserPitch,
     }
   }
 
@@ -233,9 +254,15 @@ export class TalkService extends TypertRemoteService {
   private appendSpeechEvent(session: Session | undefined, event: DshTalkSpeechEvent): void {
     if (session === undefined) return
     try {
-      // Two-argument append: the pinned 0.1.0-rc.6 peers have no append-envelope
-      // option; the two-argument form typechecks against rc.6 and newer builds.
-      session.append('dsh-talk/speech', event)
+      // Local DSH master can mark out-of-tree plugin observations ignorable.
+      // Cast so this plugin source still typechecks against its pinned session
+      // dependency while avoiding required unknown events in this checkout.
+      const appendIgnorable = session.append as unknown as (
+        type: 'dsh-talk/speech',
+        data: DshTalkSpeechEvent,
+        opts: { readonly ignorable: true },
+      ) => void
+      appendIgnorable.call(session, 'dsh-talk/speech', event, { ignorable: true })
     } catch (error) {
       this.ctx.logger.warn(`dsh-talk: failed to log speech event: ${sanitizeText(error instanceof Error ? error.message : String(error))}`)
     }
@@ -267,6 +294,7 @@ export class TalkService extends TypertRemoteService {
         engine: this.resolved.sttEngine,
         resolved: resolveSttEngine(this.resolved),
         language: this.resolved.sttLanguage,
+        silenceFinaliseMs: this.resolved.sttSilenceFinaliseMs,
         funasrUrl: this.resolved.funasrUrl,
         whisperModel: this.resolved.whisperModelPath,
       },
@@ -277,6 +305,11 @@ export class TalkService extends TypertRemoteService {
         fallbackToBrowser: this.resolved.ttsFallbackToBrowser,
         piperModel: this.resolved.piperModelPath,
         edgeTtsVoice: this.resolved.edgeTtsVoice,
+        browser: {
+          voiceName: this.resolved.browserVoiceName,
+          rate: this.resolved.browserRate,
+          pitch: this.resolved.browserPitch,
+        },
       },
       announce: {
         enabled: this.resolved.announceEnabled,

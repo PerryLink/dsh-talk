@@ -48,6 +48,9 @@ export function applyTalkSpeechProjection(state: TalkSpeechProjectionState, even
     reason: event.data.reason,
     ...(event.data.error !== undefined ? { error: event.data.error } : {}),
     ...(event.data.interrupted === true ? { interrupted: true } : {}),
+    ...(event.data.voice !== undefined ? { voice: event.data.voice } : {}),
+    ...(event.data.rate !== undefined ? { rate: event.data.rate } : {}),
+    ...(event.data.pitch !== undefined ? { pitch: event.data.pitch } : {}),
   }
 }
 

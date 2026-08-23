@@ -29,6 +29,24 @@ function speechEvent(seq: number, utteranceId: string) {
   } as unknown as SessionEvent
 }
 
+function browserSpeechEvent(seq: number, utteranceId: string) {
+  return {
+    seq,
+    type: 'dsh-talk/speech',
+    data: {
+      kind: 'tts',
+      utteranceId,
+      engine: 'browser',
+      text: 'Hello.',
+      audioBytes: 0,
+      reason: 'speak-tool',
+      voice: 'Google UK English Female',
+      rate: 1.2,
+      pitch: 0.9,
+    },
+  } as unknown as SessionEvent
+}
+
 describe('talk:speech projection', () => {
   it('starts at null', () => {
     expect(initTalkSpeechProjection()).toBeNull()
@@ -51,10 +69,26 @@ describe('talk:speech projection', () => {
     expect(viewTalkSpeechProjection(null)).toBeNull()
   })
 
+  it('folds browser delivery settings (voice/rate/pitch) through the projection', () => {
+    const state = applyTalkSpeechProjection(initTalkSpeechProjection(), browserSpeechEvent(4, 'u-voice'))
+    expect(state?.voice).toBe('Google UK English Female')
+    expect(state?.rate).toBe(1.2)
+    expect(state?.pitch).toBe(0.9)
+    expect(talkSpeechProjectionSchema.safeParse(state).success).toBe(true)
+    // Local-engine events carry no browser delivery fields.
+    const local = applyTalkSpeechProjection(initTalkSpeechProjection(), speechEvent(5, 'u-local'))!
+    expect('voice' in local).toBe(false)
+    expect('rate' in local).toBe(false)
+    expect('pitch' in local).toBe(false)
+  })
+
   it('validates both the null and value shapes', () => {
     expect(talkSpeechProjectionSchema.safeParse(null).success).toBe(true)
     const value = applyTalkSpeechProjection(initTalkSpeechProjection(), speechEvent(2, 'u-1'))!
     expect(talkSpeechProjectionSchema.safeParse(value).success).toBe(true)
     expect(talkSpeechProjectionSchema.safeParse({ nope: 1 }).success).toBe(false)
+    // Delivery bounds mirror the SpeechSynthesis utterance ranges.
+    expect(talkSpeechProjectionSchema.safeParse({ ...value, rate: 0.05 }).success).toBe(false)
+    expect(talkSpeechProjectionSchema.safeParse({ ...value, pitch: 2.5 }).success).toBe(false)
   })
 })

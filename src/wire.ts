@@ -26,6 +26,8 @@ export interface TalkStatus {
     engine: (typeof STT_ENGINES)[number]
     resolved: 'web' | 'funasr' | 'whisper'
     language: string
+    /** Silence window in ms before continuous dictation auto-finalises. */
+    silenceFinaliseMs: number
     funasrUrl: string | null
     whisperModel: string | null
   }
@@ -37,6 +39,15 @@ export interface TalkStatus {
     fallbackToBrowser: boolean
     piperModel: string | null
     edgeTtsVoice: string
+    /** Browser SpeechSynthesis delivery settings. */
+    browser: {
+      /** Preferred browser voice name; null = platform default. */
+      voiceName: string | null
+      /** SpeechSynthesis rate. */
+      rate: number
+      /** SpeechSynthesis pitch. */
+      pitch: number
+    }
   }
   /** Event announcement switches and phrases. */
   announce: {
@@ -64,6 +75,7 @@ export const TALK_STATUS_SCHEMA = z.object({
     engine: z.union([z.literal('auto'), z.literal('web'), z.literal('funasr'), z.literal('whisper')]),
     resolved: z.union([z.literal('web'), z.literal('funasr'), z.literal('whisper')]),
     language: z.string(),
+    silenceFinaliseMs: z.number(),
     funasrUrl: z.string().nullable(),
     whisperModel: z.string().nullable(),
   }),
@@ -74,6 +86,11 @@ export const TALK_STATUS_SCHEMA = z.object({
     fallbackToBrowser: z.boolean(),
     piperModel: z.string().nullable(),
     edgeTtsVoice: z.string(),
+    browser: z.object({
+      voiceName: z.string().nullable(),
+      rate: z.number().min(0.1).max(10),
+      pitch: z.number().min(0).max(2),
+    }),
   }),
   announce: z.object({
     enabled: z.boolean(),

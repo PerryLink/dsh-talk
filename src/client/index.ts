@@ -85,6 +85,17 @@ export async function apply(ctx: ClientContext): Promise<void> {
     const audio: TalkMicInjected['audio'] = async (utteranceId) =>
       unwrap<TalkAudio | null>(await talk.audio(utteranceId), 'audio')
     const conversation = scope.get('conversation') as IConversation | undefined
+    // Master's sanctioned id → session-scope-ctx exchange (same pattern
+    // ui-commands uses); resolves to undefined when either service is
+    // unavailable (rc.8 builds without the scope exchange).
+    const sessions = scope.get('sessions') as { scope?: (id: unknown) => unknown } | undefined
+    const forSession: NonNullable<TalkMicInjected['forSession']> = (id) => {
+      if (typeof id !== 'string') return undefined
+      if (conversation === undefined || sessions?.scope === undefined) return undefined
+      const actx = sessions.scope(id)
+      if (actx === undefined || actx === null) return undefined
+      return conversation.input.for(actx as Parameters<typeof conversation.input.for>[0])
+    }
     const setDraft: TalkMicInjected['setDraft'] = (text) => {
       conversation?.input.for(scope).setDraft(text)
     }
@@ -100,7 +111,7 @@ export async function apply(ctx: ClientContext): Promise<void> {
       name: 'conversation.input.left',
       id: 'talk-mic',
       order: 20,
-      inject: (): TalkMicInjected => ({ status, interrupt, transcribe, audio, setDraft, send }),
+      inject: (): TalkMicInjected => ({ status, interrupt, transcribe, audio, setDraft, send, forSession }),
     }, TalkMicButton))
 
     scope.slots.inject('settings.plugins.tab', () => scope.slots.register({
