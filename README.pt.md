@@ -79,6 +79,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 | `stt.engine` | `auto` | `auto` / `web` / `funasr` / `whisper`; auto prefere um motor local configurado, depois Web Speech |
 | `stt.language` | `auto` | Idioma BCP-47 ou `auto` |
 | `stt.interim` | `true` | Mostrar transcrições intermediárias (Web Speech) |
+| `stt.silenceFinaliseMs` | `4000` | Parar o Web Speech contínuo após estes milissegundos sem fala (500..15000) |
 | `stt.funasr.url` | *(nenhuma)* | Endpoint de inferência FunASR; obrigatório com o motor `funasr` |
 | `stt.whisper.modelPath` | *(nenhuma)* | Modelo whisper.cpp; obrigatório com o motor `whisper` |
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`; auto prefere piper, depois edge-tts, depois a voz do navegador |
@@ -105,13 +106,14 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 
 - **Permissões**: o plugin guarda apenas uma cache de áudio em memória com limite de bytes; a permissão do microfone é mediada pelo navegador. A aba de configurações apenas anexa fragmentos ao patch do perfil com backup — nunca reescreve o arquivo.
 - **Dados**: o áudio nunca entra no contexto do modelo nem no registro de sessão. O evento `dsh-talk/speech` carrega apenas o id da fala, motor, razão, tamanho e texto saneado. Toda superfície de exibição/registro redige credenciais, JWT, cabeçalhos bearer e caminhos temporários.
-- **Rede**: apenas os motores que você configurar são contatados (síntese em rede do edge-tts, um endpoint FunASR); a voz do navegador e o Web Speech ficam no dispositivo.
+- **Rede**: apenas os motores que você configurar são contatados. `edge-tts` faz síntese pela rede, o FunASR usa seu endpoint configurado e o `webkitSpeechRecognition` do Chrome envia o áudio do microfone aos servidores do Google para transcrição; a reprodução de `speechSynthesis` do navegador permanece local.
 
 ## Limites de segurança
 
 - **Visível para o modelo ⟺ registrado** — o modelo vê apenas o valor canônico da ferramenta speak; cada fala é reconstruível a partir do registro de sessão.
 - **Anúncios de aprovação nunca bloqueiam** — o listener de `approval/request` sempre chama `next()`.
 - **Saída saneada** — credenciais e caminhos temporários de áudio nunca chegam a registros ou telas.
+- **Compatibilidade do host** — eventos de fala duráveis dependem do suporte do DSH a eventos de log ignoráveis (`52a0ddf597`). Um host padrão `0.1.0-rc.8` sem esse recurso do núcleo pode executar o plugin, mas a segurança de recarga de sessão dos eventos de fala regride; use um host que inclua o recurso quando a recarga segura for importante.
 - **Falha ruidosa** — motores inválidos, valores fora de faixa e motores sem seu modelo/endpoint obrigatório falham ao montar.
 
 ## Limitações conhecidas
