@@ -245,10 +245,31 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
         : snapshot.stt.language
       recognition.lang = lang
       recognition.interimResults = true
-      recognition.continuous = false
+      recognition.continuous = true
       recognition.maxAlternatives = 1
       let lastFull = ''
       let recognitionFailed = false
+      const silenceFinaliseMs = snapshot.stt.silenceFinaliseMs
+      let silenceTimer: ReturnType<typeof setTimeout> | null = null
+      const clearSilence = (): void => {
+        if (silenceTimer !== null) {
+          clearTimeout(silenceTimer)
+          silenceTimer = null
+        }
+      }
+      const armSilence = (): void => {
+        clearSilence()
+        silenceTimer = setTimeout(() => {
+          silenceTimer = null
+          if (recognitionRef.current !== recognition) return
+          try {
+            recognition.stop()
+          } catch {
+            // The recognizer already ended; onend handled finalisation.
+          }
+        }, silenceFinaliseMs)
+      }
+      armSilence()
       // Web Speech re-reports the whole results collection on every event, so
       // rebuild the complete transcript from index 0 each time instead of
       // accumulating fragments across events (an accumulator duplicates text
@@ -263,14 +284,17 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
       }
       recognition.onresult = (event) => {
         lastFull = buildTranscript(event)
+        armSilence()
         if (lastFull !== '') writeDraft(lastFull)
       }
       recognition.onend = () => {
+        clearSilence()
         recognitionRef.current = null
         setRecording(false)
         if (!recognitionFailed) finishWithText(lastFull)
       }
       recognition.onerror = (event) => {
+        clearSilence()
         recognitionFailed = true
         recognitionRef.current = null
         setRecording(false)

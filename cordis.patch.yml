@@ -33,6 +33,8 @@
           language: auto
           # Show interim transcriptions (Web Speech only).
           interim: true
+          # Stop continuous Web Speech after this many milliseconds without speech (500..15000).
+          silenceFinaliseMs: 4000
           # FunASR HTTP inference server (used when engine resolves to funasr).
           funasr:
             # Full inference endpoint URL; required for the funasr engine.
