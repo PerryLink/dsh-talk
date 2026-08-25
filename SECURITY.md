@@ -30,7 +30,7 @@ That flow keeps the report confidential while we triage, and it is the channel w
 
 This plugin gives the harness a voice loop: microphone recording with browser/local speech-to-text, text-to-speech through the browser voice or local subprocess engines (edge-tts/piper), and event announcements. Its own guarantees:
 
-- Audio content never enters the model context or the session log — only sanitized metadata (utterance id, engine, reason, size, text) is logged.
+- Audio content never enters the model context or the session log — only sanitized metadata (utterance id, engine, reason, size, text, and browser voice/rate/pitch when applicable) is logged.
 - Spoken text and every display/log surface pass the sanitizers (credentials, JWTs, bearer headers, control characters, temp paths are redacted or bounded).
 - Local engines run through the official `ctx.subprocess` seam with argv arrays (no shell string interpolation) and abort-signal wiring.
 - The settings panel writes config only as append-only patch fragments with a timestamped backup; it never rewrites the profile file.

@@ -119,7 +119,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 ## Permissions & data
 
 - **Permissions**: the plugin stores nothing but an in-memory, byte-capped audio cache; microphone permission is browser-mediated. The settings tab only appends patch fragments to the profile with a timestamped backup — never rewrites the file.
-- **Data**: audio never enters the model context or the session log. The `dsh-talk/speech` event carries the utterance id, engine, reason, size, and sanitized text only. All display/log surfaces redact credentials, JWTs, bearer headers, and temp paths.
+- **Data**: audio never enters the model context or the session log. The `dsh-talk/speech` event carries the utterance id, engine, reason, size, sanitized text, and browser voice/rate/pitch when applicable. All display/log surfaces redact credentials, JWTs, bearer headers, and temp paths.
 - **Network**: only the engines you configure are contacted (edge-tts network synthesis, a FunASR endpoint); the browser voice and Web Speech stay on-device.
 
 ## Security boundaries
