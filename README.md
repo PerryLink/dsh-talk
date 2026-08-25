@@ -123,6 +123,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 - **Model-visible ⟺ logged** — the model sees only the speak tool's canonical value; every utterance is reconstructable from the session log.
 - **Approval announcements never block** — the `approval/request` listener always calls `next()`.
 - **Sanitized output** — credentials and temp audio paths never reach logs or displays.
+- **Host compatibility** — durable speech events rely on a DSH session-log feature (ignorable log-only events) that is not yet available in any released DSH, including `0.1.1-rc.2`; it exists in a development fork and is being proposed upstream. Hosts without it can run the plugin, but speech-event session-reload safety regresses; treat the plugin as reload-safe only on a host that includes the feature.
 - **Fail loud** — invalid engines, out-of-range values, and engines configured without their required model/endpoint fail the mount.
 
 ## Known limitations

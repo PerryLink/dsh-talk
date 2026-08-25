@@ -18,6 +18,27 @@ describe('apply — assembly', () => {
     expect(projections).toBeDefined()
   })
 
+  it('emits talk:speech on the registry change feed when a speech event lands', async () => {
+    const harness = await mountHarness()
+    const projections = harness.ctx.get('sessionProjections') as {
+      onChanged(listener: (session: unknown, key: string, value: unknown, seq: number) => void): () => void
+    }
+    const seen: Array<{ key: string; value: { utteranceId: string } | null; seq: number }> = []
+    projections.onChanged((_session, key, value, seq) => { seen.push({ key, value: value as { utteranceId: string } | null, seq }) })
+    harness.session.append('dsh-talk/speech', {
+      kind: 'tts',
+      utteranceId: 'u-wire',
+      engine: 'browser',
+      text: 'wire check',
+      audioBytes: 0,
+      reason: 'speak-tool',
+    })
+    await new Promise(resolve => setTimeout(resolve, 20))
+    const frame = seen.find(entry => entry.key === 'talk:speech')
+    expect(frame).toBeDefined()
+    expect(frame?.value?.utteranceId).toBe('u-wire')
+  })
+
   it('approval/request announces without blocking and always delegates', async () => {
     const harness = await mountHarness({ announce: { onApproval: true } })
     let nextRan = false

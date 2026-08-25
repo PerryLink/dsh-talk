@@ -113,6 +113,7 @@ Todos los ajustes son campos `Config` de Schemastery (modificables desde cordis.
 - **Visible para el modelo ⟺ registrado** — el modelo solo ve el valor canónico de la herramienta speak; cada locución es reconstruible desde el registro de sesión.
 - **Los anuncios de aprobación nunca bloquean** — el listener de `approval/request` siempre llama a `next()`.
 - **Salida saneada** — credenciales y rutas temporales de audio nunca llegan a registros ni pantallas.
+- **Compatibilidad del host** — los eventos de voz duraderos dependen de una función del registro de sesión de DSH (eventos de log ignorables) que aún no está disponible en ninguna versión publicada de DSH, incluida `0.1.1-rc.2`; existe en un fork de desarrollo y se propone su incorporación upstream. Un host sin ella puede ejecutar el plugin, pero la seguridad de recarga de sesión para los eventos de voz se degrada; considera el plugin seguro ante recargas solo en un host que incluya la función.
 - **Fallo ruidoso** — motores inválidos, valores fuera de rango y motores sin su modelo/endpoint requerido fallan al montar.
 
 ## Limitaciones conocidas
