@@ -1,7 +1,7 @@
 /**
  * Shared test harness for dsh-talk: REAL Cordis `Context`, REAL
  * `SessionStore`/`Session`/`ToolRuntime`/`SessionProjectionRegistry` from the
- * 0.1.0-rc.6 peers, plus a scripted subprocess provider (a subclass of the
+ * 0.1.1-rc.2 peers, plus a scripted subprocess provider (a subclass of the
  * REAL `SubprocessRuntime`) and a structurally complete fake agent. The
  * speech engines run through the same command/exit path as production, with
  * stdout/stderr and exit codes scripted per test.
@@ -114,7 +114,11 @@ export async function mountHarness(config: Record<string, unknown> = {}): Promis
   session.append('turn/start', { turn: 1 })
   ctx.provide('systemPrompt', { tools: () => () => undefined, section: () => () => undefined } as never)
   await ctx.plugin(ToolRuntime)
-  await ctx.plugin(SessionProjectionRegistry)
+  // Direct construction binds the registry's own `session/event` listener to
+  // THIS context; `ctx.plugin()` would mount it on a child scope whose
+  // listener never sees root-emitted session events (production resolves the
+  // service at composition level).
+  new SessionProjectionRegistry(ctx)
   // `SubprocessRuntime` is a Cordis Service: construction self-registers.
   new FakeSubprocessRuntime(ctx)
 

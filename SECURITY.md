@@ -35,5 +35,6 @@ This plugin gives the harness a voice loop: microphone recording with browser/lo
 - Local engines run through the official `ctx.subprocess` seam with argv arrays (no shell string interpolation) and abort-signal wiring.
 - The settings panel writes config only as append-only patch fragments with a timestamped backup; it never rewrites the profile file.
 - Microphone permission and recording are entirely browser-mediated; the plugin stores audio in memory only, capped, and never persists it.
+- Released DSH hosts through `0.1.1-rc.2` cannot mark plugin speech events ignorable. Live playback works, but reopening such a session may replay its latest speech state; this is a reload UX limitation, not session-file corruption.
 
 Vulnerabilities in the harness itself should be reported to the official harness maintainers instead.
