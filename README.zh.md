@@ -94,6 +94,9 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`；auto 优先 piper，其次 edge-tts，最后浏览器语音 |
 | `tts.rate` | `0` | edge-tts/piper 语速偏移（百分比，-50..50） |
 | `tts.fallbackToBrowser` | `true` | 本地引擎失败时回退浏览器语音 |
+| `tts.browser.voiceName` | *(无)* | 首选浏览器语音名称；未找到时使用平台默认语音 |
+| `tts.browser.rate` | `1` | 浏览器 SpeechSynthesis 语速（0.1..10） |
+| `tts.browser.pitch` | `1` | 浏览器 SpeechSynthesis 音高（0..2） |
 | `tts.piper.modelPath` | *(无)* | piper 语音模型；引擎为 `piper` 时必填 |
 | `announce.enabled` | `true` | 事件播报总开关 |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | 播报哪些事件 |

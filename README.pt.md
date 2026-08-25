@@ -85,6 +85,9 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`; auto prefere piper, depois edge-tts, depois a voz do navegador |
 | `tts.rate` | `0` | Deslocamento de velocidade em porcentagem (-50..50) para edge-tts/piper |
 | `tts.fallbackToBrowser` | `true` | Cair para a voz do navegador quando um motor local falha |
+| `tts.browser.voiceName` | *(nenhuma)* | Nome preferido da voz do navegador; se não existir, usa o padrão da plataforma |
+| `tts.browser.rate` | `1` | Velocidade do SpeechSynthesis do navegador (0.1..10) |
+| `tts.browser.pitch` | `1` | Tom do SpeechSynthesis do navegador (0..2) |
 | `tts.piper.modelPath` | *(nenhuma)* | Modelo de voz piper; obrigatório com o motor `piper` |
 | `announce.enabled` | `true` | Interruptor mestre de anúncios |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | Quais eventos são falados |

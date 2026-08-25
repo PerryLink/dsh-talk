@@ -37,6 +37,15 @@ export interface TalkStatus {
     fallbackToBrowser: boolean
     piperModel: string | null
     edgeTtsVoice: string
+    /** Browser SpeechSynthesis delivery settings. */
+    browser: {
+      /** Preferred browser voice name; null = platform default. */
+      voiceName: string | null
+      /** SpeechSynthesis rate. */
+      rate: number
+      /** SpeechSynthesis pitch. */
+      pitch: number
+    }
   }
   /** Event announcement switches and phrases. */
   announce: {
@@ -80,6 +89,11 @@ export const TALK_STATUS_SCHEMA = z.object({
     fallbackToBrowser: z.boolean(),
     piperModel: z.string().nullable(),
     edgeTtsVoice: z.string(),
+    browser: z.object({
+      voiceName: z.string().nullable(),
+      rate: z.number().min(0.1).max(10),
+      pitch: z.number().min(0).max(2),
+    }),
   }),
   announce: z.object({
     enabled: z.boolean(),

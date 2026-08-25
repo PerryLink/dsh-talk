@@ -51,6 +51,38 @@ describe('speak tool', () => {
     expect(speech.length).toBeGreaterThan(0)
   })
 
+  it('carries browser delivery settings and the per-call voice override in the speech event', async () => {
+    const harness = await mountHarness({ tts: { browser: { voiceName: 'Configured Voice', rate: 1.5, pitch: 0.8 } } })
+    await callTool(harness, { text: 'hello', engine: 'browser' })
+    let data = (harness.session.events.filter(event => event.type === 'dsh-talk/speech').at(-1)?.data ?? {}) as {
+      voice?: string
+      rate?: number
+      pitch?: number
+    }
+    expect(data.voice).toBe('Configured Voice')
+    expect(data.rate).toBe(1.5)
+    expect(data.pitch).toBe(0.8)
+    await callTool(harness, { text: 'hello again', engine: 'browser', voice: 'Override Voice' })
+    data = (harness.session.events.filter(event => event.type === 'dsh-talk/speech').at(-1)?.data ?? {}) as typeof data
+    expect(data.voice).toBe('Override Voice')
+    expect(data.rate).toBe(1.5)
+    expect(data.pitch).toBe(0.8)
+  })
+
+  it('omits browser delivery fields on local-engine utterances', async () => {
+    const harness = await mountHarness()
+    harness.subprocess.nextSynthBytes = 'ID3-fake-audio'
+    const result = await callTool(harness, { text: 'hello', engine: 'edge-tts', interrupt: false })
+    expect(result.isError).toBe(false)
+    if (result.isError) throw new Error('expected successful local synthesis')
+    expect(result.value).toMatchObject({ spoken: true, engine: 'edge-tts' })
+    const data = (harness.session.events.filter(event => event.type === 'dsh-talk/speech').at(-1)?.data ?? {}) as Record<string, unknown>
+    expect(data.engine).toBe('edge-tts')
+    expect('voice' in data).toBe(false)
+    expect('rate' in data).toBe(false)
+    expect('pitch' in data).toBe(false)
+  })
+
   it('falls back to the browser voice when edge-tts fails', async () => {
     const harness = await mountHarness()
     harness.subprocess.nextExitCode = 1
