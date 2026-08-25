@@ -140,7 +140,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests against the local harness checkout
 pnpm run typecheck:ci  # tsc against the published 0.1.1-rc.2 types (no paths)
-pnpm test           # vitest: 58 tests, 10 suites
+pnpm test           # vitest: 59 tests, 10 suites
 pnpm run build      # tsc declarations + tsdown bundles (lib/)
 pnpm run verify:self-contained  # dependency specs resolve from the registry
 pnpm run verify:artifacts       # built ESM faces + client ModuleLoader handshake
