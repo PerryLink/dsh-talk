@@ -108,7 +108,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 ## Permissões e dados
 
 - **Permissões**: o plugin guarda apenas uma cache de áudio em memória com limite de bytes; a permissão do microfone é mediada pelo navegador. A aba de configurações apenas anexa fragmentos ao patch do perfil com backup — nunca reescreve o arquivo.
-- **Dados**: o áudio nunca entra no contexto do modelo nem no registro de sessão. O evento `dsh-talk/speech` carrega apenas o id da fala, motor, razão, tamanho e texto saneado. Toda superfície de exibição/registro redige credenciais, JWT, cabeçalhos bearer e caminhos temporários.
+- **Dados**: o áudio nunca entra no contexto do modelo nem no registro de sessão. O evento `dsh-talk/speech` carrega o id da fala, motor, razão, tamanho, texto saneado e, quando aplicável, voz, velocidade e tom do navegador. Toda superfície de exibição/registro redige credenciais, JWT, cabeçalhos bearer e caminhos temporários.
 - **Rede**: apenas os motores que você configurar são contatados (síntese em rede do edge-tts, um endpoint FunASR); a voz do navegador e o Web Speech ficam no dispositivo.
 
 ## Limites de segurança
