@@ -247,22 +247,28 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
       recognition.interimResults = true
       recognition.continuous = false
       recognition.maxAlternatives = 1
-      let finalText = ''
+      let lastFull = ''
       let recognitionFailed = false
-      recognition.onresult = (event) => {
-        let interim = ''
-        for (let index = event.resultIndex; index < event.results.length; index += 1) {
-          const result = event.results[index]!
-          const text = result[0]?.transcript ?? ''
-          if (index === event.results.length - 1) interim += text
-          else finalText += text
+      // Web Speech re-reports the whole results collection on every event, so
+      // rebuild the complete transcript from index 0 each time instead of
+      // accumulating fragments across events (an accumulator duplicates text
+      // whenever a result is revised or re-finalised).
+      const buildTranscript = (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }): string => {
+        const parts: string[] = []
+        for (let index = 0; index < event.results.length; index += 1) {
+          const text = event.results[index]?.[0]?.transcript ?? ''
+          if (text.trim() !== '') parts.push(text.trim())
         }
-        if (interim !== '') setDraft(interim)
+        return parts.join(' ')
+      }
+      recognition.onresult = (event) => {
+        lastFull = buildTranscript(event)
+        if (lastFull !== '') writeDraft(lastFull)
       }
       recognition.onend = () => {
         recognitionRef.current = null
         setRecording(false)
-        if (!recognitionFailed) finishWithText(finalText)
+        if (!recognitionFailed) finishWithText(lastFull)
       }
       recognition.onerror = (event) => {
         recognitionFailed = true
