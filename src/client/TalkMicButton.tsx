@@ -31,10 +31,22 @@ export interface TalkMicInjected {
   setDraft: (text: string) => void
   /** Send the transcription as a user message. */
   send: (text: string) => Promise<void>
+  /**
+   * Resolve the current master input facade for one session id through
+   * `sessions.scope(id)` + `conversation.input.for(actx)`; undefined when
+   * either service is unavailable (rc.8 builds without the scope exchange).
+   */
+  forSession?: (id: unknown) => { setDraft(text: string): void; submit(): void } | undefined
 }
 
 /** Full component props assembled by the input-slot renderer. */
 export type TalkMicProps = PropsRuntime<'conversation.input.left'> & InjectFace<TalkMicInjected>
+
+/** Structural face of the standard-kit input actions current master feeds every session-scope slot component. */
+interface RuntimeInputActions {
+  setDraft(text: string): void
+  submit(): void
+}
 
 /** Minimal structural face of the Web Speech API (Chrome/Edge). */
 interface SpeechRecognitionLike {
@@ -85,7 +97,36 @@ function supportedMime(): string | undefined {
  * @returns the button element.
  */
 export function TalkMicButton(props: TalkMicProps): ReactNode {
-  const { status, interrupt, transcribe, audio, setDraft, send, useProjection } = props
+  const { status, interrupt, transcribe, audio, setDraft, send, useProjection, forSession } = props
+  const inputActions = (props as Partial<Record<'inputActions', RuntimeInputActions>>).inputActions
+  const sessionIdProp = (props as Partial<Record<'sessionId', unknown>>).sessionId
+  const writeDraft = (text: string): void => {
+    if (inputActions !== undefined) {
+      inputActions.setDraft(text)
+      return
+    }
+    const facade = sessionIdProp !== undefined ? forSession?.(sessionIdProp) : undefined
+    if (facade !== undefined) {
+      facade.setDraft(text)
+      return
+    }
+    console.warn('[dsh-talk] falling back to rc.8 injected setDraft')
+    setDraft(text)
+  }
+  const submitText = async (text: string): Promise<void> => {
+    if (inputActions !== undefined) {
+      inputActions.setDraft(text)
+      inputActions.submit()
+      return
+    }
+    const facade = sessionIdProp !== undefined ? forSession?.(sessionIdProp) : undefined
+    if (facade !== undefined) {
+      facade.setDraft(text)
+      facade.submit()
+      return
+    }
+    await send(text)
+  }
   const [mic, setMic] = useState<MicViewModel>(initMic)
   const [recording, setRecording] = useState(false)
   const [settings, setSettings] = useState<TalkStatus | undefined>(undefined)
@@ -119,9 +160,9 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     setMic(foldMic(micRef.current, trimmed === '' ? { kind: 'failed', message: 'empty transcription' } : { kind: 'transcribed', text: trimmed }))
     if (trimmed === '') return
     if (settingsRef.current?.record.autoSubmit === true) {
-      void send(trimmed)
+      void submitText(trimmed)
     } else {
-      setDraft(trimmed)
+      writeDraft(trimmed)
     }
   }
 
