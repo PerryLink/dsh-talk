@@ -89,6 +89,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 | `stt.engine` | `auto` | `auto` / `web` / `funasr` / `whisper`；auto 优先已配置的本地引擎，其次 Web Speech |
 | `stt.language` | `auto` | BCP-47 语言或 `auto` |
 | `stt.interim` | `true` | 显示中间转写（Web Speech） |
+| `stt.silenceFinaliseMs` | `4000` | 连续 Web Speech 在没有语音活动达到此毫秒数后停止（500..15000） |
 | `stt.funasr.url` | *(无)* | FunASR 推理端点；引擎为 `funasr` 时必填 |
 | `stt.whisper.modelPath` | *(无)* | whisper.cpp 模型；引擎为 `whisper` 时必填 |
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`；auto 优先 piper，其次 edge-tts，最后浏览器语音 |
@@ -115,7 +116,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 
 - **权限**：插件只保存内存中、字节受限的音频缓存；麦克风权限由浏览器管理。设置页签只向 profile 追加 patch 片段（带时间戳备份）——绝不重写文件。
 - **数据**：音频绝不进入模型上下文或会话日志。`dsh-talk/speech` 事件只携带朗读 id、引擎、原因、大小与脱敏文本。所有展示/日志面都会脱敏凭据、JWT、bearer 头与临时路径。
-- **网络**：只联系你配置的引擎（edge-tts 网络合成、FunASR 端点）；浏览器语音与 Web Speech 留在本机。
+- **网络**：只联系你配置的引擎。`edge-tts` 执行网络合成，FunASR 使用其配置的端点，而 Chrome 的 `webkitSpeechRecognition` 会将麦克风音频发送到 Google 服务器进行转写；浏览器的 `speechSynthesis` 播放仍在本机完成。
 
 ## 安全边界
 

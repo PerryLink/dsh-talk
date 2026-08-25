@@ -267,6 +267,7 @@ export class TalkService extends TypertRemoteService {
         engine: this.resolved.sttEngine,
         resolved: resolveSttEngine(this.resolved),
         language: this.resolved.sttLanguage,
+        silenceFinaliseMs: this.resolved.sttSilenceFinaliseMs,
         funasrUrl: this.resolved.funasrUrl,
         whisperModel: this.resolved.whisperModelPath,
       },

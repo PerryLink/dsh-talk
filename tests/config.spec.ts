@@ -11,11 +11,12 @@ import { Config, resolveConfig, MAX_RECORD_SECONDS } from '../src/config.ts'
 
 describe('Config schema', () => {
   it('fills every leaf default on an empty input', () => {
-    const normalized = Config({}) as { record: { enabled: boolean }; stt: { engine: string; language: string; interim: boolean }; tts: { engine: string; rate: number }; announce: { enabled: boolean; messages: { turnEnd: string } } }
+    const normalized = Config({}) as { record: { enabled: boolean }; stt: { engine: string; language: string; interim: boolean; silenceFinaliseMs: number }; tts: { engine: string; rate: number }; announce: { enabled: boolean; messages: { turnEnd: string } } }
     expect(normalized.record.enabled).toBe(true)
     expect(normalized.stt.engine).toBe('auto')
     expect(normalized.stt.language).toBe('auto')
     expect(normalized.stt.interim).toBe(true)
+    expect(normalized.stt.silenceFinaliseMs).toBe(4000)
     expect(normalized.tts.engine).toBe('auto')
     expect(normalized.tts.rate).toBe(0)
     expect(normalized.announce.enabled).toBe(true)
@@ -41,6 +42,8 @@ describe('Config schema', () => {
 describe('resolveConfig', () => {
   it('re-validates bounds for a programmatic mount', () => {
     expect(() => resolveConfig({ maxSpeakChars: 0 })).toThrow(/maxSpeakChars/u)
+    expect(() => resolveConfig({ stt: { silenceFinaliseMs: 499 } })).toThrow(/silenceFinaliseMs/u)
+    expect(() => resolveConfig({ stt: { silenceFinaliseMs: 15_001 } })).toThrow(/silenceFinaliseMs/u)
   })
 
   it('fails loud when funasr is selected without an endpoint', () => {

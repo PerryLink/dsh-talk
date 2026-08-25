@@ -90,6 +90,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 | `stt.engine` | `auto` | `auto` / `web` / `funasr` / `whisper`; auto prefers a configured local engine, then Web Speech |
 | `stt.language` | `auto` | BCP-47 language or `auto` |
 | `stt.interim` | `true` | Show interim transcriptions (Web Speech) |
+| `stt.silenceFinaliseMs` | `4000` | Stop continuous Web Speech recognition after this many milliseconds without speech (500..15000) |
 | `stt.funasr.url` | *(none)* | FunASR inference endpoint; required when the engine is `funasr` |
 | `stt.whisper.modelPath` | *(none)* | whisper.cpp model; required when the engine is `whisper` |
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`; auto prefers piper, then edge-tts, then the browser voice |
@@ -116,7 +117,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 
 - **Permissions**: the plugin stores nothing but an in-memory, byte-capped audio cache; microphone permission is browser-mediated. The settings tab only appends patch fragments to the profile with a timestamped backup — never rewrites the file.
 - **Data**: audio never enters the model context or the session log. The `dsh-talk/speech` event carries the utterance id, engine, reason, size, and sanitized text only. All display/log surfaces redact credentials, JWTs, bearer headers, and temp paths.
-- **Network**: only the engines you configure are contacted (edge-tts network synthesis, a FunASR endpoint); the browser voice and Web Speech stay on-device.
+- **Network**: only the engines you configure are contacted. `edge-tts` performs network synthesis, FunASR uses its configured endpoint, and Chrome's `webkitSpeechRecognition` sends microphone audio to Google's servers for transcription; browser `speechSynthesis` playback remains local.
 
 ## Security boundaries
 

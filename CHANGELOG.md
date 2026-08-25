@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prefer the session slot's standard `inputActions` for composer writes, with scoped and legacy fallbacks for older hosts.
 - Resolve automatic Web Speech language from the browser locale and surface the recognizer's actual error.
 - Rebuild Web Speech transcripts from the current results collection so revised results do not duplicate text.
+- Keep Web Speech dictation active across pauses and auto-finalise it after the configured silence interval.
 
 ## [0.2.1] - 2026-08-27
 

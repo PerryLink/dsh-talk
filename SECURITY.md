@@ -35,5 +35,6 @@ This plugin gives the harness a voice loop: microphone recording with browser/lo
 - Local engines run through the official `ctx.subprocess` seam with argv arrays (no shell string interpolation) and abort-signal wiring.
 - The settings panel writes config only as append-only patch fragments with a timestamped backup; it never rewrites the profile file.
 - Microphone permission and recording are entirely browser-mediated; the plugin stores audio in memory only, capped, and never persists it.
+- Chrome's `webkitSpeechRecognition` sends microphone audio to Google's servers for transcription; Web Speech recognition is not an on-device transcription guarantee. Use a configured host engine when microphone audio must remain under your control.
 
 Vulnerabilities in the harness itself should be reported to the official harness maintainers instead.

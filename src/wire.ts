@@ -26,6 +26,7 @@ export interface TalkStatus {
     engine: (typeof STT_ENGINES)[number]
     resolved: 'web' | 'funasr' | 'whisper'
     language: string
+    silenceFinaliseMs: number
     funasrUrl: string | null
     whisperModel: string | null
   }
@@ -70,6 +71,7 @@ export const TALK_STATUS_SCHEMA = z.object({
     engine: z.union([z.literal('auto'), z.literal('web'), z.literal('funasr'), z.literal('whisper')]),
     resolved: z.union([z.literal('web'), z.literal('funasr'), z.literal('whisper')]),
     language: z.string(),
+    silenceFinaliseMs: z.number().int().min(500).max(15000),
     funasrUrl: z.string().nullable(),
     whisperModel: z.string().nullable(),
   }),
