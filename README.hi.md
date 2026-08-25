@@ -86,6 +86,9 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`; auto पहले piper, फिर edge-tts, फिर ब्राउज़र वॉइस |
 | `tts.rate` | `0` | edge-tts/piper के लिए गति ऑफ़सेट प्रतिशत में (-50..50) |
 | `tts.fallbackToBrowser` | `true` | स्थानीय इंजन विफल होने पर ब्राउज़र वॉइस पर गिरें |
+| `tts.browser.voiceName` | *(कोई नहीं)* | पसंदीदा ब्राउज़र वॉइस नाम; न मिलने पर प्लेटफ़ॉर्म डिफ़ॉल्ट उपयोग होता है |
+| `tts.browser.rate` | `1` | ब्राउज़र SpeechSynthesis गति (0.1..10) |
+| `tts.browser.pitch` | `1` | ब्राउज़र SpeechSynthesis पिच (0..2) |
 | `tts.piper.modelPath` | *(कोई नहीं)* | piper वॉइस मॉडल; `piper` इंजन के लिए आवश्यक |
 | `announce.enabled` | `true` | घोषणाओं का मास्टर स्विच |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | कौन से इवेंट बोले जाएँ |

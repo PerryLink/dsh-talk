@@ -96,6 +96,9 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`; auto prefers piper, then edge-tts, then the browser voice |
 | `tts.rate` | `0` | Rate offset in percent (-50..50) for edge-tts/piper |
 | `tts.fallbackToBrowser` | `true` | Fall back to the browser voice when a local engine fails |
+| `tts.browser.voiceName` | *(none)* | Preferred browser voice name; an unknown name uses the platform default |
+| `tts.browser.rate` | `1` | Browser SpeechSynthesis rate (0.1..10) |
+| `tts.browser.pitch` | `1` | Browser SpeechSynthesis pitch (0..2) |
 | `tts.piper.modelPath` | *(none)* | piper voice model; required when the engine is `piper` |
 | `announce.enabled` | `true` | Master switch for event announcements |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | Which events are spoken |
