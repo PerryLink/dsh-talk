@@ -61,4 +61,12 @@ describe('resolveConfig', () => {
     const resolved = resolveConfig({})
     expect(resolved.messageApproval).toBe('Approval required.')
   })
+
+  it('resolves the VAD defaults and rejects an out-of-range silence window', () => {
+    const resolved = resolveConfig({})
+    expect(resolved.vadEnabled).toBe(true)
+    expect(resolved.vadSilenceMs).toBe(1_500)
+    expect(resolved.vadEnergyThreshold).toBe(0.01)
+    expect(() => resolveConfig({ record: { vad: { silenceMs: 10 } } })).toThrow(/silenceMs/u)
+  })
 })

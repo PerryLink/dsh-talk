@@ -289,6 +289,11 @@ export class TalkService extends TypertRemoteService {
         hotkey: this.resolved.recordHotkey,
         maxSeconds: this.resolved.recordMaxSeconds,
         autoSubmit: this.resolved.recordAutoSubmit,
+        vad: {
+          enabled: this.resolved.vadEnabled,
+          silenceMs: this.resolved.vadSilenceMs,
+          energyThreshold: this.resolved.vadEnergyThreshold,
+        },
       },
       interrupt: this.resolved.interruptEnabled,
       patchFile: this.patchFile(),

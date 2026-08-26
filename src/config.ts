@@ -36,6 +36,25 @@ export const DEFAULT_MAX_AUDIO_CACHE_BYTES = 8 * 1024 * 1024
 /** Ceiling for the audio cache. */
 export const MAX_AUDIO_CACHE_BYTES = 64 * 1024 * 1024
 
+/** Default silence duration (ms) before the recorder auto-ends and submits. */
+export const DEFAULT_VAD_SILENCE_MS = 1_500
+
+/** Ceiling for one VAD silence window. */
+export const MAX_VAD_SILENCE_MS = 10_000
+
+/** Default RMS energy floor above which a frame counts as speech (0..1). */
+export const DEFAULT_VAD_ENERGY_THRESHOLD = 0.01
+
+/** Voice-activity detection for the recorder (silence auto-end). */
+export interface VadConfig {
+  /** Detect silence and auto-end the recording (default true; degrades when AudioContext is absent). */
+  enabled?: boolean
+  /** Consecutive silence in milliseconds before the recording auto-ends (default 1500). */
+  silenceMs?: number
+  /** RMS energy floor (0..1) above which audio counts as speech (default 0.01). */
+  energyThreshold?: number
+}
+
 /** Recording behavior: the composer microphone button and its hotkey. */
 export interface RecordConfig {
   /** Show the microphone button and allow recording (default true). */
@@ -46,6 +65,8 @@ export interface RecordConfig {
   maxSeconds?: number
   /** Submit the transcription as the user message automatically (default false). */
   autoSubmit?: boolean
+  /** Voice-activity detection (silence auto-end). */
+  vad?: VadConfig
 }
 
 /** Speech-to-text configuration. */
@@ -158,6 +179,12 @@ export interface ResolvedConfig {
   recordMaxSeconds: number
   /** Submit transcriptions automatically. */
   recordAutoSubmit: boolean
+  /** Whether silence auto-end (VAD) is enabled. */
+  vadEnabled: boolean
+  /** Consecutive silence before the recording auto-ends (ms). */
+  vadSilenceMs: number
+  /** RMS energy floor above which audio counts as speech (0..1). */
+  vadEnergyThreshold: number
   /** Resolved STT engine preference. */
   sttEngine: SttEngine
   /** BCP-47 language or "auto". */
@@ -225,6 +252,11 @@ export const Config: z<Config> = z.object({
     hotkey: z.union([z.string(), z.const(null)]).default(null),
     maxSeconds: z.number().min(1).max(MAX_RECORD_SECONDS).default(DEFAULT_MAX_RECORD_SECONDS),
     autoSubmit: z.boolean().default(false),
+    vad: z.object({
+      enabled: z.boolean().default(true),
+      silenceMs: z.number().min(200).max(MAX_VAD_SILENCE_MS).default(DEFAULT_VAD_SILENCE_MS),
+      energyThreshold: z.number().min(0).max(1).default(DEFAULT_VAD_ENERGY_THRESHOLD),
+    }),
   }),
   stt: z.object({
     engine: z.union(['auto', 'web', 'funasr', 'whisper'] as const).default('auto'),
@@ -336,6 +368,10 @@ export function resolveConfig(config: Config | undefined): ResolvedConfig {
   const recordMaxSeconds = numberOf(record.maxSeconds, DEFAULT_MAX_RECORD_SECONDS, 1, MAX_RECORD_SECONDS, 'record.maxSeconds')
   const recordAutoSubmit = booleanOf(record.autoSubmit, false, 'record.autoSubmit')
 
+  const vadEnabled = booleanOf(record.vad?.enabled, true, 'record.vad.enabled')
+  const vadSilenceMs = numberOf(record.vad?.silenceMs, DEFAULT_VAD_SILENCE_MS, 200, MAX_VAD_SILENCE_MS, 'record.vad.silenceMs')
+  const vadEnergyThreshold = numberOf(record.vad?.energyThreshold, DEFAULT_VAD_ENERGY_THRESHOLD, 0, 1, 'record.vad.energyThreshold')
+
   const sttEngineRaw = stt.engine ?? 'auto'
   if (!isSttEngine(sttEngineRaw)) {
     throw new Error(`dsh-talk: config.stt.engine must be one of "auto", "web", "funasr", "whisper", got ${JSON.stringify(sttEngineRaw)}`)
@@ -405,6 +441,9 @@ export function resolveConfig(config: Config | undefined): ResolvedConfig {
     recordHotkey,
     recordMaxSeconds,
     recordAutoSubmit,
+    vadEnabled,
+    vadSilenceMs,
+    vadEnergyThreshold,
     sttEngine: sttEngineRaw,
     sttLanguage,
     sttInterim,

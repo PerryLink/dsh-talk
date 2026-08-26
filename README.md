@@ -86,6 +86,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 | `record.hotkey` | *(none)* | Optional toggle hotkey, e.g. `"alt+r"` |
 | `record.maxSeconds` | `60` | Recording cap in seconds (1..600) |
 | `record.autoSubmit` | `false` | Submit the transcription as a user message (false = fill the draft) |
+| `record.vad.enabled` / `silenceMs` / `energyThreshold` | `true` / `1500` / `0.01` | Voice-activity detection: silence auto-ends the recording (degrades when `AudioContext` is absent) |
 | `stt.engine` | `auto` | `auto` / `web` / `funasr` / `whisper`; auto prefers a configured local engine, then Web Speech |
 | `stt.language` | `auto` | BCP-47 language or `auto` |
 | `stt.interim` | `true` | Show interim transcriptions (Web Speech) |

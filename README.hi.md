@@ -76,6 +76,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 | `record.hotkey` | *(कोई नहीं)* | वैकल्पिक टॉगल हॉटकी, जैसे `"alt+r"` |
 | `record.maxSeconds` | `60` | रिकॉर्डिंग सीमा सेकंड में (1..600) |
 | `record.autoSubmit` | `false` | ट्रांसक्रिप्शन को उपयोगकर्ता संदेश के रूप में सबमिट करें (false = ड्राफ्ट भरें) |
+| `record.vad.enabled` / `silenceMs` / `energyThreshold` | `true` / `1500` / `0.01` | ध्वनि-गतिविधि पहचान: मौन रिकॉर्डिंग स्वतः समाप्त करता है (AudioContext अनुपस्थित होने पर मैनुअल स्टॉप) |
 | `stt.engine` | `auto` | `auto` / `web` / `funasr` / `whisper`; auto पहले कॉन्फ़िगर किया स्थानीय इंजन, फिर Web Speech |
 | `stt.language` | `auto` | BCP-47 भाषा या `auto` |
 | `stt.interim` | `true` | अंतरिम ट्रांसक्रिप्शन दिखाएँ (Web Speech) |

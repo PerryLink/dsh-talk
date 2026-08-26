@@ -14,6 +14,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '../projection.ts'
 import { foldMic, initMic, type MicViewModel } from './present.ts'
+import { advanceSilence, isSpeechFrame, rmsOf, silenceTrips } from './vad.ts'
 import type { TalkAudio, TalkInterruptResult, TalkStatus, TalkTranscript } from '../wire.ts'
 
 /** Registration-side injected face: the recorder's host/browser bindings. */
@@ -94,6 +95,9 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const startedRef = useRef<number>(0)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const silenceMsRef = useRef<number>(0)
   const micRef = useRef(mic)
   micRef.current = mic
   const settingsRef = useRef(settings)
@@ -138,6 +142,41 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     }
   }
 
+  // Feature-detected voice-activity detection: attach an AnalyserNode to the
+  // live stream when the recorder path is used. Absent AudioContext degrades
+  // to no auto-end (the user stops manually).
+  const setupVad = (stream: MediaStream, vad: TalkStatus['record']['vad']): void => {
+    if (!vad.enabled) return
+    const Ctor = (globalThis as unknown as { AudioContext?: typeof AudioContext }).AudioContext
+    if (Ctor === undefined) return
+    try {
+      const context = new Ctor()
+      const source = context.createMediaStreamSource(stream)
+      const analyser = context.createAnalyser()
+      analyser.fftSize = 2048
+      source.connect(analyser)
+      audioContextRef.current = context
+      analyserRef.current = analyser
+      silenceMsRef.current = 0
+    } catch {
+      // VAD degrades to no auto-end.
+    }
+  }
+
+  const teardownVad = (): void => {
+    analyserRef.current = null
+    silenceMsRef.current = 0
+    const context = audioContextRef.current
+    audioContextRef.current = null
+    if (context !== null) {
+      try {
+        void context.close()
+      } catch {
+        // The context already closed.
+      }
+    }
+  }
+
   const stop = (): void => {
     setRecording(false)
     if (timerRef.current !== null) {
@@ -146,6 +185,7 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     }
     if (recognitionRef.current !== null) stopRecognition()
     else stopRecorder()
+    teardownVad()
     setMic(foldMic(micRef.current, { kind: 'stopped' }))
   }
 
@@ -205,6 +245,7 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
       setMic(foldMic(micRef.current, { kind: 'failed', message: 'microphone permission denied' }))
       return
     }
+    setupVad(stream, snapshot.record.vad)
     let recorder: MediaRecorder
     try {
       recorder = new MediaRecorder(stream, { mimeType: mime })
@@ -248,6 +289,17 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     timerRef.current = setInterval(() => {
       const elapsed = Math.ceil((Date.now() - startedRef.current) / 1000)
       setMic(foldMic(micRef.current, { kind: 'tick', elapsedSec: elapsed, maxSeconds: settingsRef.current?.record.maxSeconds ?? 60 }))
+      const analyser = analyserRef.current
+      const vad = settingsRef.current?.record.vad
+      if (analyser !== null && vad?.enabled === true) {
+        const buffer = new Float32Array(analyser.fftSize)
+        analyser.getFloatTimeDomainData(buffer)
+        silenceMsRef.current = advanceSilence(silenceMsRef.current, 500, isSpeechFrame(rmsOf(buffer), vad.energyThreshold))
+        if (silenceTrips(silenceMsRef.current, vad.silenceMs)) {
+          stop()
+          return
+        }
+      }
       if (elapsed >= (settingsRef.current?.record.maxSeconds ?? 60)) stop()
     }, 500)
   }

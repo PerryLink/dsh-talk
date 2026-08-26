@@ -51,6 +51,12 @@ export interface TalkStatus {
     hotkey: string | null
     maxSeconds: number
     autoSubmit: boolean
+    /** Voice-activity detection (silence auto-end). */
+    vad: {
+      enabled: boolean
+      silenceMs: number
+      energyThreshold: number
+    }
   }
   /** Whether starting to talk interrupts playback. */
   interrupt: boolean
@@ -86,6 +92,11 @@ export const TALK_STATUS_SCHEMA = z.object({
     hotkey: z.string().nullable(),
     maxSeconds: z.number().int(),
     autoSubmit: z.boolean(),
+    vad: z.object({
+      enabled: z.boolean(),
+      silenceMs: z.number().int(),
+      energyThreshold: z.number(),
+    }),
   }),
   interrupt: z.boolean(),
   patchFile: z.string().nullable(),

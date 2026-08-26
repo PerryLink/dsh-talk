@@ -16,6 +16,14 @@
           maxSeconds: 60
           # Submit the transcription as the user message (false = fill the draft).
           autoSubmit: false
+          # Voice-activity detection: silence auto-ends the recording.
+          vad:
+            # Detect silence and auto-end (degrades when AudioContext is absent).
+            enabled: true
+            # Consecutive silence in milliseconds before auto-end (200..10000).
+            silenceMs: 1500
+            # RMS energy floor (0..1) above which audio counts as speech.
+            energyThreshold: 0.01
         # Speech-to-text.
         stt:
           # auto | web | funasr | whisper — auto prefers a configured local
