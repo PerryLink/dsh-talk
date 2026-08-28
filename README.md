@@ -105,6 +105,8 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 | `maxSpeakChars` | `20000` | Cap on the speak tool's text length (1..100000) |
 | `maxAudioCacheBytes` | `8388608` | In-memory synthesized-audio cache cap (1 MiB..64 MiB) |
 
+`stt.silenceFinaliseMs` and `record.vad.silenceMs` are separate mechanisms: the first finalises the Web Speech transcript when continuous recognition hears no speech, the second is the MediaRecorder energy-based detector that ends the recording (and submits it when `record.autoSubmit` is on). They run in different pipelines and share no state.
+
 ## Tools & surfaces
 
 | Surface | Kind | Notes |
