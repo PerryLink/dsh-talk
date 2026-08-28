@@ -94,6 +94,8 @@ Todos los ajustes son campos `Config` de Schemastery (modificables desde cordis.
 | `maxSpeakChars` | `20000` | Límite del texto de la herramienta speak (1..100000) |
 | `maxAudioCacheBytes` | `8388608` | Límite de la caché de audio en memoria (1 MiB..64 MiB) |
 
+`stt.silenceFinaliseMs` y `record.vad.silenceMs` son mecanismos distintos: el primero finaliza la transcripción de Web Speech cuando el reconocimiento continuo deja de oír voz; el segundo es el detector por energía de MediaRecorder que termina la grabación (y la envía cuando `record.autoSubmit` está activo). Funcionan en canalizaciones diferentes y no comparten estado.
+
 ## Herramientas y superficies
 
 | Superficie | Tipo | Notas |

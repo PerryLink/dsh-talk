@@ -103,6 +103,8 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 | `maxSpeakChars` | `20000` | speak 工具文本上限（1..100000） |
 | `maxAudioCacheBytes` | `8388608` | 内存合成音频缓存上限（1 MiB..64 MiB） |
 
+`stt.silenceFinaliseMs` 与 `record.vad.silenceMs` 是两套独立机制：前者在连续 Web Speech 识别听不到语音时定稿转写文本；后者是 MediaRecorder 的能量检测器，用于结束录音（`record.autoSubmit` 开启时随即提交）。两者处于不同流水线，不共享任何状态。
+
 ## 工具与界面
 
 | 界面 | 类型 | 说明 |
