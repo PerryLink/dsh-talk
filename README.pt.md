@@ -113,7 +113,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 - **Visível para o modelo ⟺ registrado** — o modelo vê apenas o valor canônico da ferramenta speak; cada fala é reconstruível a partir do registro de sessão.
 - **Anúncios de aprovação nunca bloqueiam** — o listener de `approval/request` sempre chama `next()`.
 - **Saída saneada** — credenciais e caminhos temporários de áudio nunca chegam a registros ou telas.
-- **Compatibilidade do host** — eventos de fala duráveis dependem de um recurso do registo de sessão do DSH (eventos de log ignoráveis) que ainda não está disponível em nenhuma versão publicada do DSH, incluindo `0.1.1-rc.2`; existe num fork de desenvolvimento e está a ser proposto upstream. Um host sem ele pode executar o plugin, mas a segurança de recarga de sessão dos eventos de fala regride; considere o plugin seguro em recargas apenas num host que inclua o recurso.
+- **Compatibilidade do host** — o evento de sessão `dsh-talk/speech` é anexado sem a marca `ignorable`, porque nenhum host DSH publicado até `0.1.1-rc.2` permite que um plugin a defina. Hosts a partir de `0.1.0-rc.7` recusam carregar a frio um registo de sessão que contenha um tipo de evento desconhecido sem marca, por isso uma sessão que já falou pelo menos uma vez falha no seu próximo carregamento a frio com `SessionFormatUnsupportedError`. O registo fica intacto e é reparável (ver Limitações conhecidas). A correção prevista transporta a reprodução ao vivo por um push Remote em vez do registo de sessão e escreve o evento de registo apenas em hosts que o possam marcar como ignorável.
 - **Falha ruidosa** — motores inválidos, valores fora de faixa e motores sem seu modelo/endpoint obrigatório falham ao montar.
 
 ## Limitações conhecidas
@@ -122,6 +122,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 - **Motores locais são instalação sua**: os executáveis e modelos de `edge-tts`, `piper` e `whisper.cpp` devem ser instalados à parte.
 - **Formato de gravação**: o navegador grava com seu codec nativo do MediaRecorder; o whisper.cpp pode exigir um gravador WAV ou conversão no servidor.
 - **Configurações aplicam ao recarregar**: a aba anexa ao patch do perfil; um reload do perfil (ou reinício da web) ativa as mudanças.
+- **A sessão não carrega a frio depois de falar**: em hosts `0.1.0-rc.7` ou mais recentes, o próximo carregamento a frio de uma sessão falha com `SessionFormatUnsupportedError` quando o seu registo contém eventos `dsh-talk/speech` sem marca. Reparação: pare o host, faça cópia do registo `.jsonl` da sessão, acrescente `"ignorable":true` como membro de topo em cada linha JSON cujo `"type"` seja `"dsh-talk/speech"` (por exemplo, insira `"ignorable":true,` logo a seguir à `{` inicial) e reabra a sessão. Nada mais muda e nada se perde.
 
 ## Desenvolvimento
 

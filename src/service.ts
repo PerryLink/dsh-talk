@@ -152,7 +152,7 @@ export class TalkService extends TypertRemoteService {
   /**
    * Speak one utterance: resolve the engine, synthesize locally or delegate
    * to the browser voice, cache the audio, and append the `dsh-talk/speech`
-   * session event (log-only, ignorable).
+   * session event (log-only; appended without the `ignorable` marker, see `speech.ts`).
    *
    * @param text - text to speak (sanitized and capped here).
    * @param options - engine/voice/reason/session/signal.
