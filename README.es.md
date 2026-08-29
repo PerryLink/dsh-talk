@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🎙️ dsh-talk
+- **Canal 1024 store**: `npm i -g dsh1024` una vez, luego `dsh1024 plugin --profile web add dsh-talk` (cuenta para el ranking de instalaciones de [deepseek1024.com](https://deepseek1024.com)).
 
 **Bucle de sesión con voz primero para DeepSeek Harness: háblale y escucha su respuesta.**
 
