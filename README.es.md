@@ -81,6 +81,7 @@ Todos los ajustes son campos `Config` de Schemastery (modificables desde cordis.
 | `stt.engine` | `auto` | `auto` / `web` / `funasr` / `whisper`; auto prefiere un motor local configurado, luego Web Speech |
 | `stt.language` | `auto` | Idioma BCP-47 o `auto` |
 | `stt.interim` | `true` | Mostrar transcripciones intermedias (Web Speech) |
+| `stt.silenceFinaliseMs` | `4000` | Detener Web Speech continuo tras estos milisegundos sin voz (500..15000) |
 | `stt.funasr.url` | *(ninguna)* | Endpoint de inferencia FunASR; obligatorio con el motor `funasr` |
 | `stt.whisper.modelPath` | *(ninguna)* | Modelo whisper.cpp; obligatorio con el motor `whisper` |
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`; auto prefiere piper, luego edge-tts, luego la voz del navegador |
@@ -97,6 +98,8 @@ Todos los ajustes son campos `Config` de Schemastery (modificables desde cordis.
 | `maxSpeakChars` | `20000` | Límite del texto de la herramienta speak (1..100000) |
 | `maxAudioCacheBytes` | `8388608` | Límite de la caché de audio en memoria (1 MiB..64 MiB) |
 
+`stt.silenceFinaliseMs` y `record.vad.silenceMs` son mecanismos distintos: el primero finaliza la transcripción de Web Speech cuando el reconocimiento continuo deja de oír voz; el segundo es el detector por energía de MediaRecorder que termina la grabación (y la envía cuando `record.autoSubmit` está activo). Funcionan en canalizaciones diferentes y no comparten estado.
+
 ## Herramientas y superficies
 
 | Superficie | Tipo | Notas |
@@ -110,7 +113,7 @@ Todos los ajustes son campos `Config` de Schemastery (modificables desde cordis.
 
 - **Permisos**: el plugin solo guarda una caché de audio en memoria con límite de bytes; el permiso de micrófono lo gestiona el navegador. La pestaña de ajustes solo añade fragmentos al parche del perfil con copia de seguridad — nunca reescribe el archivo.
 - **Datos**: el audio nunca entra en el contexto del modelo ni en el registro de sesión. El evento `dsh-talk/speech` lleva el id de locución, motor, razón, tamaño, texto saneado y, cuando corresponde, voz, velocidad y tono del navegador. Toda superficie de visualización/registro redacta credenciales, JWT, cabeceras bearer y rutas temporales.
-- **Red**: solo se contactan los motores que configures (síntesis en red de edge-tts, un endpoint FunASR); la voz del navegador y Web Speech quedan en el dispositivo.
+- **Red**: solo se contactan los motores que configures. `edge-tts` realiza síntesis de red, FunASR usa su endpoint configurado y `webkitSpeechRecognition` de Chrome envía el audio del micrófono a los servidores de Google para transcribirlo; la reproducción de `speechSynthesis` del navegador permanece local.origin/main
 
 ## Límites de seguridad
 
