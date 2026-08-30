@@ -7,17 +7,24 @@
  * @module dsh-talk/test/tool.spec
  */
 
-import { CallId } from '@deepseek-ai/dsh-llm'
 import { describe, expect, it } from 'vitest'
 import type { ToolExecutionResult } from '@deepseek-ai/dsh-tools'
 import { mountHarness, type Harness } from './harness.ts'
 
 let callCounter = 0
 
+/** Execute-parameter brand of the call id (CallId on rc.2, ToolCallId on 0.1.2-alpha). */
+type ExecuteArgs = Parameters<Harness['ctx']['tools']['execute']>[0]
+
+/** Build a call id typed to whichever brand the resolved tool registry expects. */
+function callIdOf(id: string): ExecuteArgs['callId'] {
+  return id as ExecuteArgs['callId']
+}
+
 async function callTool(harness: Harness, args: unknown): Promise<ToolExecutionResult> {
   callCounter += 1
   return harness.ctx.tools.execute({
-    callId: CallId(`talk-spec-${callCounter}`),
+    callId: callIdOf(`talk-spec-${callCounter}`),
     name: 'speak',
     arguments: args,
     agent: harness.agent,

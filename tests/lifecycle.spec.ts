@@ -11,7 +11,6 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
-import { CallId } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
@@ -91,7 +90,9 @@ describe('speak tool three interfaces', () => {
       expect(schema!.parameters.required).toContain('text')
 
       const result = await harness.ctx.tools.execute({
-        callId: CallId('dsh-talk-three-interfaces'),
+        // Ruler-agnostic brand: rc.2 names it CallId, 0.1.2-alpha ToolCallId;
+        // the cast derives whichever brand the resolved registry expects.
+        callId: 'dsh-talk-three-interfaces' as unknown as Parameters<typeof harness.ctx.tools.execute>[0]['callId'],
         name: 'speak',
         arguments: { text: 'hello', engine: 'browser' },
         agent: harness.agent,
