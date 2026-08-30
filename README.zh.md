@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🎙️ dsh-talk
 - **1024 商店渠道**：先 `npm i -g dsh1024`，再 `dsh1024 plugin --profile web add dsh-talk`（计入 [deepseek1024.com](https://deepseek1024.com) 安装排行）。
@@ -25,7 +25,7 @@
 
 | 方面 | 状态 |
 |---|---|
-| Harness | DeepSeek Harness `0.1.1-rc.2` |
+| Harness | DeepSeek Harness `0.1.1-rc.2`（主要目标）；`0.1.2-alpha.1` 上运行且语音日志门生效（见已知限制） |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | 浏览器 | Web Speech + MediaRecorder（Chrome/Edge 最佳）；其余场景用宿主侧转写/TTS 引擎 |
 
@@ -33,7 +33,7 @@
 
 `dsh-talk` 双向闭合语音环路：
 
-- **`speak` 工具** —— agent 朗读自己的回复。TTS 引擎：浏览器语音、`edge-tts`（网络神经语音）或 `piper`（本地）。音频在浏览器播放；会话日志记录脱敏后的朗读内容。
+- **`speak` 工具** —— agent 朗读自己的回复。TTS 引擎：浏览器语音、`edge-tts`（网络神经语音）或 `piper`（本地）。音频在浏览器播放；在能够承载该事件的宿主上，会话日志记录脱敏后的朗读内容（见安全边界）。
 - **输入框麦克风按钮** —— 按下说话，转写文本自动回填输入框（或直接提交）。STT 引擎：浏览器 Web Speech（含中间结果）、FunASR HTTP 服务或本地 `whisper.cpp`。
 - **说话即打断** —— 开始说话即停止当前播报（经 client→host 的 `talk` Remote 通道）。
 - **事件播报** —— 回合完成、待审批（waterfall 安全：绝不阻塞门禁）与出错，带静音开关与可配话术。
@@ -121,15 +121,15 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 ## 权限与数据
 
 - **权限**：插件只保存内存中、字节受限的音频缓存；麦克风权限由浏览器管理。设置页签只向 profile 追加 patch 片段（带时间戳备份）——绝不重写文件。
-- **数据**：音频绝不进入模型上下文或会话日志。`dsh-talk/speech` 事件携带朗读 id、引擎、原因、大小、脱敏文本，并在适用时携带浏览器语音、语速和音高。所有展示/日志面都会脱敏凭据、JWT、bearer 头与临时路径。
-- **网络**：只联系你配置的引擎。`edge-tts` 执行网络合成，FunASR 使用其配置的端点，而 Chrome 的 `webkitSpeechRecognition` 会将麦克风音频发送到 Google 服务器进行转写；浏览器的 `speechSynthesis` 播放仍在本机完成。origin/main
+- **数据**：音频绝不进入模型上下文或会话日志。在宿主的会话词汇表接受该事件的宿主上，`dsh-talk/speech` 事件携带朗读 id、引擎、原因、大小、脱敏文本，并在适用时携带浏览器语音、语速和音高；在无信封宿主上该事件完全不写入。所有展示/日志面都会脱敏凭据、JWT、bearer 头与临时路径。
+- **网络**：只联系你配置的引擎。`edge-tts` 执行网络合成，FunASR 使用其配置的端点，而 Chrome 的 `webkitSpeechRecognition` 会将麦克风音频发送到 Google 服务器进行转写；浏览器的 `speechSynthesis` 播放仍在本机完成。
 
 ## 安全边界
 
-- **模型可见 ⟺ 已记录** —— 模型只看到 speak 工具的规范值；每次朗读均可自会话日志重建。
+- **模型可见 ⟺ 已记录** —— 模型只看到 speak 工具的规范值与渲染文本。`dsh-talk/speech` 事件只在宿主能够承载它时写入（见宿主兼容性）；`tool/call` + `tool/result` 事件始终是可重建的痕迹。
 - **审批播报绝不阻塞** —— `approval/request` 监听器总是调用 `next()`。
 - **输出脱敏** —— 凭据与临时音频路径绝不上日志或展示面。
-- **宿主兼容性** —— `dsh-talk/speech` 会话事件在追加时不带 `ignorable` 标记，因为截至 `0.1.1-rc.2` 的所有已发布 DSH 宿主都不允许插件设置它。自 `0.1.0-rc.7` 起的宿主会拒绝冷加载含有未标记未知事件类型的会话日志，因此凡是说过话的会话，下一次冷加载都会以 `SessionFormatUnsupportedError` 失败。日志本身完好且可修复（见已知限制）。计划中的修复改用 Remote 推送承载实时播放而不再经由会话日志，并且只在能够标记为可忽略的宿主上写入该日志事件。
+- **宿主兼容性** —— `dsh-talk/speech` 事件经自适应门写入：已知词汇表覆盖该事件的宿主直接追加；带 `ignorable` 追加选项的宿主带标记追加；无信封宿主——截至 `0.1.1-rc.2` 的全部已发布线，以及移除了信封并对未知类型读取即失败关闭的 `0.1.2-alpha.1`——完全不追加，因此语音在这些宿主线上永远不会污染会话日志。此时实时播放历史保持为空，speak 工具结果是可重建的审计痕迹。
 - **失败响亮** —— 非法引擎、越界数值、缺模型/端点的引擎配置在挂载时即报错。
 
 ## 已知限制
@@ -138,7 +138,8 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 - **本地引擎需自行安装**：`edge-tts`、`piper`、`whisper.cpp` 可执行文件与模型需单独安装。
 - **录音格式**：浏览器按其原生 MediaRecorder 编解码器录音；whisper.cpp 可能要求 WAV 录音配置或服务端转换。
 - **设置重载生效**：设置页签追加到 profile patch；重载 profile（或重启 Web 应用）后生效。
-- **说话后会话无法冷加载**：在 `0.1.0-rc.7` 及更新的宿主上，一旦会话日志含有未标记的 `dsh-talk/speech` 事件，其下一次冷加载会以 `SessionFormatUnsupportedError` 失败。修复：停止宿主，备份该会话的 `.jsonl` 日志，为每一行 `"type"` 为 `"dsh-talk/speech"` 的 JSON 记录加上顶层成员 `"ignorable":true`（例如在起始的 `{` 之后插入 `"ignorable":true,`），然后重新打开会话。其余内容不变，不会丢失任何数据。
+- **无信封宿主上实时播放历史为空**：在 `0.1.1-rc.2` 与 `0.1.2-alpha.1` 上，宿主词汇表不认识 `dsh-talk/speech`，因此门不写入任何内容，客户端的会话级播放列表保持为空。朗读本身、麦克风、设置页签与工具均不受影响。
+- **dsh-talk ≤ 0.2.1 写下的存量日志可能需要在冷加载前修复**：版本 0.2.1 及更早会追加未标记的 `dsh-talk/speech` 事件。在 `0.1.0-rc.7` 及更新的宿主上，日志已含这些事件的会话，其下一次冷加载会以 `SessionFormatUnsupportedError` 失败。修复：停止宿主，备份该会话的 `.jsonl` 日志，为每一行 `"type"` 为 `"dsh-talk/speech"` 的 JSON 记录加上顶层成员 `"ignorable":true`（例如在起始的 `{` 之后插入 `"ignorable":true,`），然后重新打开会话。其余内容不变，不会丢失任何数据；本版本的新追加永远不会产生未标记事件。
 
 ## 开发
 
@@ -146,7 +147,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc：src + tests，对照本地 harness checkout
 pnpm run typecheck:ci  # tsc：对照已发布的 0.1.1-rc.2 类型（无 paths）
-pnpm test           # vitest：74 个测试、12 个套件
+pnpm test           # vitest：77 个测试、13 个套件
 pnpm run build      # tsc 声明 + tsdown bundle（lib/）
 pnpm run verify:self-contained  # 依赖声明全部来自 registry
 pnpm run verify:artifacts       # 构建产物 ESM 面 + client ModuleLoader 握手

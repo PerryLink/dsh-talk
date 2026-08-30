@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to this project are documented in this file.
 
@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Gate the `dsh-talk/speech` session-log append adaptively: hosts whose known-type vocabulary covers the event append plainly, hosts with the `ignorable` append option append it with the marker, and envelope-less hosts (`0.1.1-rc.2`, `0.1.2-alpha.1`) get no append, so speech can never pollute the session log. On those hosts the client playback history stays empty and the speak tool results remain the reconstructable audit trail.
+- Migrate the browser half off the removed `dsh-client-runtime`: the client context is the plain cordis `Context`, the `remote` service type comes from the published `dsh-api-remotes` assembly, and the slot registry is read through a local structural contract. The `dsh.client.inject` list and the peer/devDependencies no longer reference `dsh-client-runtime`.
+
 ### Fixed
 
 - Prefer the session slot's standard `inputActions` for composer writes, with scoped and legacy fallbacks for older hosts.
@@ -14,11 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rebuild Web Speech transcripts from the current results collection so revised results do not duplicate text.
 - Apply browser voice, rate, and pitch settings end to end while keeping local-engine speech events free of browser delivery fields.
 - Keep Web Speech dictation active across pauses and auto-finalise it after the configured silence interval.
-origin/main
 
-### Changed
+### Removed
 
-- Documented the cold-load refusal (`SessionFormatUnsupportedError`) that unmarked `dsh-talk/speech` events trigger on hosts `0.1.0-rc.7` and newer, with the JSONL repair steps, and added assembled projection-emission coverage.
+- The `SessionFormatUnsupportedError` cold-load risk for newly written logs: unmarked `dsh-talk/speech` events are never appended anymore (legacy logs written by ≤ 0.2.1 still follow the documented repair steps).
 
 ## [0.2.1] - 2026-08-27
 

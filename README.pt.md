@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🎙️ dsh-talk
 - **Canal 1024 store**: `npm i -g dsh1024` uma vez, depois `dsh1024 plugin --profile web add dsh-talk` (conta para o ranking de instalações do [deepseek1024.com](https://deepseek1024.com)).
@@ -25,7 +25,7 @@
 
 | Superfície | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.1-rc.2` |
+| Harness | DeepSeek Harness `0.1.1-rc.2` (alvo principal); `0.1.2-alpha.1` roda com a comporta do registro de fala ativa (ver Limitações conhecidas) |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Navegador | Web Speech + MediaRecorder (melhor no Chrome/Edge); motores de transcrição/TTS do host para o resto |
 
@@ -33,7 +33,7 @@
 
 O `dsh-talk` fecha o loop de voz nos dois sentidos:
 
-- **Ferramenta `speak`** — o agente lê suas respostas em voz alta. Motores TTS: voz do navegador, `edge-tts` (vozes neurais em rede) ou `piper` (local). O áudio toca no navegador; o registro de sessão guarda a fala saneada.
+- **Ferramenta `speak`** — o agente lê suas respostas em voz alta. Motores TTS: voz do navegador, `edge-tts` (vozes neurais em rede) ou `piper` (local). O áudio toca no navegador; nos hosts que podem transportá-lo, o registro de sessão guarda a fala saneada (ver Limites de segurança).
 - **Botão de microfone** — pressione, fale e a transcrição cai na caixa de entrada (ou envia direto). Motores STT: Web Speech do navegador (com resultados intermediários), um servidor HTTP FunASR ou `whisper.cpp` local.
 - **Falar interrompe** — começar a falar para a reprodução (canal client→host sobre o namespace `talk`).
 - **Anúncios de eventos** — fim de turno, aprovações pendentes (seguro em cascata: nunca bloqueia o portão) e erros, com interruptor de mudo e frases configuráveis.
@@ -112,15 +112,15 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 ## Permissões e dados
 
 - **Permissões**: o plugin guarda apenas uma cache de áudio em memória com limite de bytes; a permissão do microfone é mediada pelo navegador. A aba de configurações apenas anexa fragmentos ao patch do perfil com backup — nunca reescreve o arquivo.
-- **Dados**: o áudio nunca entra no contexto do modelo nem no registro de sessão. O evento `dsh-talk/speech` carrega o id da fala, motor, razão, tamanho, texto saneado e, quando aplicável, voz, velocidade e tom do navegador. Toda superfície de exibição/registro redige credenciais, JWT, cabeçalhos bearer e caminhos temporários.
-- **Rede**: apenas os motores que você configurar são contatados. `edge-tts` faz síntese pela rede, o FunASR usa seu endpoint configurado e o `webkitSpeechRecognition` do Chrome envia o áudio do microfone aos servidores do Google para transcrição; a reprodução de `speechSynthesis` do navegador permanece local.origin/main
+- **Dados**: o áudio nunca entra no contexto do modelo nem no registro de sessão. Onde o vocabulário de sessão do host o aceita, o evento `dsh-talk/speech` carrega o id da fala, motor, razão, tamanho, texto saneado e, quando aplicável, voz, velocidade e tom do navegador; em hosts sem envelope o evento não é escrito. Toda superfície de exibição/registro redige credenciais, JWT, cabeçalhos bearer e caminhos temporários.
+- **Rede**: apenas os motores que você configurar são contatados. `edge-tts` faz síntese pela rede, o FunASR usa seu endpoint configurado e o `webkitSpeechRecognition` do Chrome envia o áudio do microfone aos servidores do Google para transcrição; a reprodução de `speechSynthesis` do navegador permanece local.
 
 ## Limites de segurança
 
-- **Visível para o modelo ⟺ registrado** — o modelo vê apenas o valor canônico da ferramenta speak; cada fala é reconstruível a partir do registro de sessão.
+- **Visível para o modelo ⟺ registrado** — o modelo vê apenas o valor canônico e o texto renderizado da ferramenta speak. O evento `dsh-talk/speech` é anexado apenas quando o host pode transportá-lo (ver Compatibilidade do host); os eventos `tool/call` + `tool/result` continuam sendo sempre o rastro reconstruível.
 - **Anúncios de aprovação nunca bloqueiam** — o listener de `approval/request` sempre chama `next()`.
 - **Saída saneada** — credenciais e caminhos temporários de áudio nunca chegam a registros ou telas.
-- **Compatibilidade do host** — o evento de sessão `dsh-talk/speech` é anexado sem a marca `ignorable`, porque nenhum host DSH publicado até `0.1.1-rc.2` permite que um plugin a defina. Hosts a partir de `0.1.0-rc.7` recusam carregar a frio um registo de sessão que contenha um tipo de evento desconhecido sem marca, por isso uma sessão que já falou pelo menos uma vez falha no seu próximo carregamento a frio com `SessionFormatUnsupportedError`. O registo fica intacto e é reparável (ver Limitações conhecidas). A correção prevista transporta a reprodução ao vivo por um push Remote em vez do registo de sessão e escreve o evento de registo apenas em hosts que o possam marcar como ignorável.
+- **Compatibilidade do host** — o evento `dsh-talk/speech` é anexado por uma comporta adaptativa. Hosts cujo vocabulário de tipos conhecidos cobre o evento o anexam diretamente; hosts com a opção `ignorable` o anexam com a marca; hosts sem envelope — toda linha publicada até `0.1.1-rc.2`, e `0.1.2-alpha.1`, que removeu o envelope e falha fechado para tipos desconhecidos — não recebem nenhum append, de modo que a fala nunca pode poluir o registro de sessão nessas linhas. Neles o histórico de reprodução ao vivo fica vazio e os resultados da ferramenta speak são o rastro reconstruível.
 - **Falha ruidosa** — motores inválidos, valores fora de faixa e motores sem seu modelo/endpoint obrigatório falham ao montar.
 
 ## Limitações conhecidas
@@ -129,7 +129,8 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 - **Motores locais são instalação sua**: os executáveis e modelos de `edge-tts`, `piper` e `whisper.cpp` devem ser instalados à parte.
 - **Formato de gravação**: o navegador grava com seu codec nativo do MediaRecorder; o whisper.cpp pode exigir um gravador WAV ou conversão no servidor.
 - **Configurações aplicam ao recarregar**: a aba anexa ao patch do perfil; um reload do perfil (ou reinício da web) ativa as mudanças.
-- **A sessão não carrega a frio depois de falar**: em hosts `0.1.0-rc.7` ou mais recentes, o próximo carregamento a frio de uma sessão falha com `SessionFormatUnsupportedError` quando o seu registo contém eventos `dsh-talk/speech` sem marca. Reparação: pare o host, faça cópia do registo `.jsonl` da sessão, acrescente `"ignorable":true` como membro de topo em cada linha JSON cujo `"type"` seja `"dsh-talk/speech"` (por exemplo, insira `"ignorable":true,` logo a seguir à `{` inicial) e reabra a sessão. Nada mais muda e nada se perde.
+- **O histórico de reprodução ao vivo fica vazio em hosts sem envelope**: em `0.1.1-rc.2` e `0.1.2-alpha.1` o vocabulário do host não conhece `dsh-talk/speech`, então a comporta não escreve nada e a lista de reprodução da sessão no cliente fica vazia. A fala em si, o microfone, a aba de configurações e a ferramenta não são afetados.
+- **Registros antigos escritos pelo dsh-talk ≤ 0.2.1 podem exigir reparo antes do carregamento a frio**: versões até `0.2.1` anexavam eventos `dsh-talk/speech` sem marca. Em hosts `0.1.0-rc.7` ou mais recentes, uma sessão cujo registro já os contém falha no próximo carregamento a frio com `SessionFormatUnsupportedError`. Reparação: pare o host, faça cópia do registo `.jsonl` da sessão, acrescente `"ignorable":true` como membro de topo em cada linha JSON cujo `"type"` seja `"dsh-talk/speech"` (por exemplo, insira `"ignorable":true,` logo a seguir à `{` inicial) e reabra a sessão. Nada mais muda e nada se perde; novos appends desta versão nunca adicionam eventos sem marca.
 
 ## Desenvolvimento
 
@@ -137,7 +138,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests contra o checkout local do harness
 pnpm run typecheck:ci  # tsc contra os tipos publicados 0.1.1-rc.2 (sem paths)
-pnpm test           # vitest: 74 testes, 12 suítes
+pnpm test           # vitest: 77 testes, 13 suítes
 pnpm run build      # declarações tsc + bundles tsdown (lib/)
 pnpm run verify:self-contained  # as specs de dependências resolvem pelo registry
 pnpm run verify:artifacts       # faces ESM construídas + handshake ModuleLoader do cliente

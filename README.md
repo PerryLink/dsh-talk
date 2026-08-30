@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🎙️ dsh-talk
 - **1024 store channel**: `npm i -g dsh1024` once, then `dsh1024 plugin --profile web add dsh-talk` (counts toward the [deepseek1024.com](https://deepseek1024.com) install ranking).
@@ -26,7 +26,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.1-rc.2` |
+| Harness | DeepSeek Harness `0.1.1-rc.2` (primary target); `0.1.2-alpha.1` runs with the speech-log gate active (see Known limitations) |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Browser | Web Speech + MediaRecorder (Chrome/Edge best); host transcription/TTS engines for the rest |
 
@@ -34,7 +34,7 @@
 
 `dsh-talk` closes the voice loop in both directions:
 
-- **`speak` tool** — the agent speaks its replies aloud. TTS engines: the browser voice, `edge-tts` (network neural voices), or `piper` (local). Audio plays in the browser; the session log records the sanitized utterance.
+- **`speak` tool** — the agent speaks its replies aloud. TTS engines: the browser voice, `edge-tts` (network neural voices), or `piper` (local). Audio plays in the browser; on hosts that can carry it, the session log records the sanitized utterance (see Security boundaries).
 - **Composer mic button** — press it, speak, and the transcription lands in the input box (or submits directly). STT engines: the browser's Web Speech (interim results included), a FunASR HTTP server, or local `whisper.cpp`.
 - **Speak-to-interrupt** — starting to talk stops whatever is playing (client → host over the `talk` Remote namespace).
 - **Event announcements** — turn completion, pending approvals (waterfall-safe: never blocks the gate), and errors, with a mute switch and configurable phrases.
@@ -122,15 +122,15 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 ## Permissions & data
 
 - **Permissions**: the plugin stores nothing but an in-memory, byte-capped audio cache; microphone permission is browser-mediated. The settings tab only appends patch fragments to the profile with a timestamped backup — never rewrites the file.
-- **Data**: audio never enters the model context or the session log. The `dsh-talk/speech` event carries the utterance id, engine, reason, size, sanitized text, and browser voice/rate/pitch when applicable. All display/log surfaces redact credentials, JWTs, bearer headers, and temp paths.
-- **Network**: only the engines you configure are contacted. `edge-tts` performs network synthesis, FunASR uses its configured endpoint, and Chrome's `webkitSpeechRecognition` sends microphone audio to Google's servers for transcription; browser `speechSynthesis` playback remains local.origin/main
+- **Data**: audio never enters the model context or the session log. Where the host's session vocabulary accepts it, the `dsh-talk/speech` event carries the utterance id, engine, reason, size, sanitized text, and browser voice/rate/pitch when applicable; on envelope-less hosts the event is not written at all. All display/log surfaces redact credentials, JWTs, bearer headers, and temp paths.
+- **Network**: only the engines you configure are contacted. `edge-tts` performs network synthesis, FunASR uses its configured endpoint, and Chrome's `webkitSpeechRecognition` sends microphone audio to Google's servers for transcription; browser `speechSynthesis` playback remains local.
 
 ## Security boundaries
 
-- **Model-visible ⟺ logged** — the model sees only the speak tool's canonical value; every utterance is reconstructable from the session log.
+- **Model-visible ⟺ logged** — the model sees only the speak tool's canonical value and render text. The `dsh-talk/speech` event is appended only when the host can carry it (see Host compatibility); the `tool/call` + `tool/result` events always remain the reconstructable trail.
 - **Approval announcements never block** — the `approval/request` listener always calls `next()`.
 - **Sanitized output** — credentials and temp audio paths never reach logs or displays.
-- **Host compatibility** — the `dsh-talk/speech` session event is appended without the `ignorable` marker, because no released DSH host through `0.1.1-rc.2` lets a plugin set it. Hosts from `0.1.0-rc.7` onward refuse to cold-load a session log that carries an unmarked event type they do not know, so a session that has spoken at least once fails its next cold load with `SessionFormatUnsupportedError`. The log is intact and repairable (see Known limitations). The planned fix carries live playback over a Remote push instead of the session log and writes the log event only on hosts that can mark it ignorable.
+- **Host compatibility** — the `dsh-talk/speech` event is appended through an adaptive gate. Hosts whose known-type vocabulary covers the event append it plainly; hosts with the `ignorable` append option append it with the marker; envelope-less hosts — every released line through `0.1.1-rc.2`, and `0.1.2-alpha.1`, which removed the envelope and fails closed on unknown types — get no append, so speech can never pollute the session log on those lines. There, the live playback history stays empty and the speak tool results are the reconstructable audit trail.
 - **Fail loud** — invalid engines, out-of-range values, and engines configured without their required model/endpoint fail the mount.
 
 ## Known limitations
@@ -139,7 +139,8 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 - **Local engines are your install**: `edge-tts`, `piper`, and `whisper.cpp` executables and models must be installed separately.
 - **Recording format**: the browser records with its native MediaRecorder codec; whisper.cpp may require a WAV-configured recorder or a server-side conversion for other formats.
 - **Settings apply on reload**: the settings tab appends to the profile patch; a profile reload (or web-app restart) activates the changes.
-- **Session refuses to cold-load after speech**: on hosts `0.1.0-rc.7` and newer, a session's next cold load fails with `SessionFormatUnsupportedError` once its log contains unmarked `dsh-talk/speech` events. Repair: stop the host, back up the session's `.jsonl` log, add `"ignorable":true` as a top-level member of every JSON line whose `"type"` is `"dsh-talk/speech"` (for example, insert `"ignorable":true,` right after the opening `{`), then reopen the session. Nothing else changes and nothing is lost.
+- **Live playback history is empty on envelope-less hosts**: on `0.1.1-rc.2` and `0.1.2-alpha.1` the host vocabulary does not know `dsh-talk/speech`, so the gate writes nothing and the client's session-scoped playback list stays empty. Speech itself, the mic, the settings tab, and the tool are unaffected.
+- **Legacy logs written by dsh-talk ≤ 0.2.1 may need repair before cold load**: versions through `0.2.1` appended unmarked `dsh-talk/speech` events. On hosts `0.1.0-rc.7` and newer, a session whose log already contains them fails its next cold load with `SessionFormatUnsupportedError`. Repair: stop the host, back up the session's `.jsonl` log, add `"ignorable":true` as a top-level member of every JSON line whose `"type"` is `"dsh-talk/speech"` (for example, insert `"ignorable":true,` right after the opening `{`), then reopen the session. Nothing else changes and nothing is lost; new appends from this version never add unmarked events.
 
 ## Development
 
@@ -147,7 +148,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests against the local harness checkout
 pnpm run typecheck:ci  # tsc against the published 0.1.1-rc.2 types (no paths)
-pnpm test           # vitest: 74 tests, 12 suites
+pnpm test           # vitest: 77 tests, 13 suites
 pnpm run build      # tsc declarations + tsdown bundles (lib/)
 pnpm run verify:self-contained  # dependency specs resolve from the registry
 pnpm run verify:artifacts       # built ESM faces + client ModuleLoader handshake
