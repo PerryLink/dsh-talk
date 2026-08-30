@@ -237,11 +237,18 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     if (snapshot.interrupt) void interrupt()
     const recognition = webRecognition()
     if (recognition !== undefined) {
-      recognition.lang = snapshot.stt.language === 'auto' ? '' : snapshot.stt.language
+      // An 'auto' language must not assign the empty string: Chrome handles
+      // '' badly on some setups (observed as a silent immediate no-speech).
+      // Fall back to the browser locale instead.
+      const lang = snapshot.stt.language === 'auto'
+        ? (navigator.language || 'en-US')
+        : snapshot.stt.language
+      recognition.lang = lang
       recognition.interimResults = true
       recognition.continuous = false
       recognition.maxAlternatives = 1
       let finalText = ''
+      let recognitionFailed = false
       recognition.onresult = (event) => {
         let interim = ''
         for (let index = event.resultIndex; index < event.results.length; index += 1) {
@@ -255,12 +262,14 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
       recognition.onend = () => {
         recognitionRef.current = null
         setRecording(false)
-        finishWithText(finalText)
+        if (!recognitionFailed) finishWithText(finalText)
       }
-      recognition.onerror = () => {
+      recognition.onerror = (event) => {
+        recognitionFailed = true
         recognitionRef.current = null
         setRecording(false)
-        setMic(foldMic(micRef.current, { kind: 'failed', message: 'web speech recognition failed' }))
+        console.warn(`[dsh-talk] speech recognition error: ${String(event.error ?? 'unknown')}`)
+        setMic(foldMic(micRef.current, { kind: 'failed', message: `web speech recognition failed (${String(event.error ?? 'unknown')})` }))
       }
       recognitionRef.current = recognition
       try {
