@@ -123,6 +123,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 - **模型可见 ⟺ 已记录** —— 模型只看到 speak 工具的规范值；每次朗读均可自会话日志重建。
 - **审批播报绝不阻塞** —— `approval/request` 监听器总是调用 `next()`。
 - **输出脱敏** —— 凭据与临时音频路径绝不上日志或展示面。
+- **宿主兼容性** —— `dsh-talk/speech` 会话事件在追加时不带 `ignorable` 标记，因为截至 `0.1.1-rc.2` 的所有已发布 DSH 宿主都不允许插件设置它。自 `0.1.0-rc.7` 起的宿主会拒绝冷加载含有未标记未知事件类型的会话日志，因此凡是说过话的会话，下一次冷加载都会以 `SessionFormatUnsupportedError` 失败。日志本身完好且可修复（见已知限制）。计划中的修复改用 Remote 推送承载实时播放而不再经由会话日志，并且只在能够标记为可忽略的宿主上写入该日志事件。
 - **失败响亮** —— 非法引擎、越界数值、缺模型/端点的引擎配置在挂载时即报错。
 
 ## 已知限制
@@ -131,6 +132,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 - **本地引擎需自行安装**：`edge-tts`、`piper`、`whisper.cpp` 可执行文件与模型需单独安装。
 - **录音格式**：浏览器按其原生 MediaRecorder 编解码器录音；whisper.cpp 可能要求 WAV 录音配置或服务端转换。
 - **设置重载生效**：设置页签追加到 profile patch；重载 profile（或重启 Web 应用）后生效。
+- **说话后会话无法冷加载**：在 `0.1.0-rc.7` 及更新的宿主上，一旦会话日志含有未标记的 `dsh-talk/speech` 事件，其下一次冷加载会以 `SessionFormatUnsupportedError` 失败。修复：停止宿主，备份该会话的 `.jsonl` 日志，为每一行 `"type"` 为 `"dsh-talk/speech"` 的 JSON 记录加上顶层成员 `"ignorable":true`（例如在起始的 `{` 之后插入 `"ignorable":true,`），然后重新打开会话。其余内容不变，不会丢失任何数据。
 
 ## 开发
 
@@ -138,7 +140,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc：src + tests，对照本地 harness checkout
 pnpm run typecheck:ci  # tsc：对照已发布的 0.1.1-rc.2 类型（无 paths）
-pnpm test           # vitest：58 个测试、10 个套件
+pnpm test           # vitest：59 个测试、10 个套件
 pnpm run build      # tsc 声明 + tsdown bundle（lib/）
 pnpm run verify:self-contained  # 依赖声明全部来自 registry
 pnpm run verify:artifacts       # 构建产物 ESM 面 + client ModuleLoader 握手

@@ -124,6 +124,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 - **Model-visible ⟺ logged** — the model sees only the speak tool's canonical value; every utterance is reconstructable from the session log.
 - **Approval announcements never block** — the `approval/request` listener always calls `next()`.
 - **Sanitized output** — credentials and temp audio paths never reach logs or displays.
+- **Host compatibility** — the `dsh-talk/speech` session event is appended without the `ignorable` marker, because no released DSH host through `0.1.1-rc.2` lets a plugin set it. Hosts from `0.1.0-rc.7` onward refuse to cold-load a session log that carries an unmarked event type they do not know, so a session that has spoken at least once fails its next cold load with `SessionFormatUnsupportedError`. The log is intact and repairable (see Known limitations). The planned fix carries live playback over a Remote push instead of the session log and writes the log event only on hosts that can mark it ignorable.
 - **Fail loud** — invalid engines, out-of-range values, and engines configured without their required model/endpoint fail the mount.
 
 ## Known limitations
@@ -132,6 +133,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 - **Local engines are your install**: `edge-tts`, `piper`, and `whisper.cpp` executables and models must be installed separately.
 - **Recording format**: the browser records with its native MediaRecorder codec; whisper.cpp may require a WAV-configured recorder or a server-side conversion for other formats.
 - **Settings apply on reload**: the settings tab appends to the profile patch; a profile reload (or web-app restart) activates the changes.
+- **Session refuses to cold-load after speech**: on hosts `0.1.0-rc.7` and newer, a session's next cold load fails with `SessionFormatUnsupportedError` once its log contains unmarked `dsh-talk/speech` events. Repair: stop the host, back up the session's `.jsonl` log, add `"ignorable":true` as a top-level member of every JSON line whose `"type"` is `"dsh-talk/speech"` (for example, insert `"ignorable":true,` right after the opening `{`), then reopen the session. Nothing else changes and nothing is lost.
 
 ## Development
 
@@ -139,7 +141,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests against the local harness checkout
 pnpm run typecheck:ci  # tsc against the published 0.1.1-rc.2 types (no paths)
-pnpm test           # vitest: 58 tests, 10 suites
+pnpm test           # vitest: 59 tests, 10 suites
 pnpm run build      # tsc declarations + tsdown bundles (lib/)
 pnpm run verify:self-contained  # dependency specs resolve from the registry
 pnpm run verify:artifacts       # built ESM faces + client ModuleLoader handshake

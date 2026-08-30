@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prefer the session slot's standard `inputActions` for composer writes, with scoped and legacy fallbacks for older hosts.
 - Resolve automatic Web Speech language from the browser locale and surface the recognizer's actual error.
 
+### Changed
+
+- Documented the cold-load refusal (`SessionFormatUnsupportedError`) that unmarked `dsh-talk/speech` events trigger on hosts `0.1.0-rc.7` and newer, with the JSONL repair steps, and added assembled projection-emission coverage.
+
 ## [0.2.1] - 2026-08-27
 
 ### Fixed

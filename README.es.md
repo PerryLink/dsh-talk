@@ -114,6 +114,7 @@ Todos los ajustes son campos `Config` de Schemastery (modificables desde cordis.
 - **Visible para el modelo ⟺ registrado** — el modelo solo ve el valor canónico de la herramienta speak; cada locución es reconstruible desde el registro de sesión.
 - **Los anuncios de aprobación nunca bloquean** — el listener de `approval/request` siempre llama a `next()`.
 - **Salida saneada** — credenciales y rutas temporales de audio nunca llegan a registros ni pantallas.
+- **Compatibilidad del host** — el evento de sesión `dsh-talk/speech` se añade sin la marca `ignorable`, porque ningún host DSH publicado hasta `0.1.1-rc.2` permite que un plugin la establezca. Los hosts desde `0.1.0-rc.7` se niegan a cargar en frío un registro de sesión que contenga un tipo de evento desconocido sin marcar, así que una sesión que haya hablado al menos una vez falla en su siguiente carga en frío con `SessionFormatUnsupportedError`. El registro queda intacto y es reparable (ver Limitaciones conocidas). La corrección prevista transporta la reproducción en vivo por un push Remote en lugar del registro de sesión y escribe el evento de registro solo en hosts que puedan marcarlo como ignorable.
 - **Fallo ruidoso** — motores inválidos, valores fuera de rango y motores sin su modelo/endpoint requerido fallan al montar.
 
 ## Limitaciones conocidas
@@ -122,6 +123,7 @@ Todos los ajustes son campos `Config` de Schemastery (modificables desde cordis.
 - **Los motores locales se instalan aparte**: los ejecutables y modelos de `edge-tts`, `piper` y `whisper.cpp` deben instalarse por separado.
 - **Formato de grabación**: el navegador graba con su códec nativo de MediaRecorder; whisper.cpp puede requerir una grabadora WAV o una conversión en el servidor.
 - **Los ajustes aplican al recargar**: la pestaña añade al parche del perfil; una recarga del perfil (o reinicio de la web) activa los cambios.
+- **La sesión no carga en frío tras hablar**: en hosts `0.1.0-rc.7` o posteriores, la siguiente carga en frío de una sesión falla con `SessionFormatUnsupportedError` cuando su registro contiene eventos `dsh-talk/speech` sin marcar. Reparación: detén el host, haz una copia del registro `.jsonl` de la sesión, añade `"ignorable":true` como miembro de primer nivel en cada línea JSON cuyo `"type"` sea `"dsh-talk/speech"` (por ejemplo, inserta `"ignorable":true,` justo después de la `{` inicial) y vuelve a abrir la sesión. Nada más cambia y no se pierde nada.
 
 ## Desarrollo
 
@@ -129,7 +131,7 @@ Todos los ajustes son campos `Config` de Schemastery (modificables desde cordis.
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests contra el checkout local del harness
 pnpm run typecheck:ci  # tsc contra los tipos publicados 0.1.1-rc.2 (sin paths)
-pnpm test           # vitest: 58 tests, 10 suites
+pnpm test           # vitest: 59 tests, 10 suites
 pnpm run build      # declaraciones tsc + bundles tsdown (lib/)
 pnpm run verify:self-contained  # las specs de dependencias resuelven desde el registry
 pnpm run verify:artifacts       # caras ESM construidas + handshake ModuleLoader del cliente
