@@ -12,6 +12,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { writeFile } from 'node:fs/promises'
+import { KNOWN_SESSION_EVENT_TYPES } from '@deepseek-ai/dsh-session'
 import SessionStore, { SessionId, type Session } from '@deepseek-ai/dsh-session'
 import {
   SubprocessRuntime,
@@ -23,6 +24,7 @@ import {
 } from '@deepseek-ai/dsh-subprocess'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import { SPEECH_EVENT } from '../src/speech.ts'
 
 /** A subprocess provider whose spawns answer from scripted stdout/exit facts. */
 export class FakeSubprocessRuntime extends SubprocessRuntime {
@@ -120,6 +122,12 @@ export interface Harness {
 export async function mountHarness(config: Record<string, unknown> = {}): Promise<Harness> {
   const ctx = new Context()
   await ctx.plugin(SessionStore)
+  // The pinned 0.1.1-rc.2 session does not know out-of-repo plugin event
+  // types, so the adaptive gate would skip every speech append. Mark the
+  // vocabulary known so the integration specs exercise the real append and
+  // projection pipeline end to end (the gate itself has its own three-host
+  // unit spec in speech.spec.ts).
+  ;(KNOWN_SESSION_EVENT_TYPES as Set<string>).add(SPEECH_EVENT)
   const session = ctx.sessions.create(SessionId('dsh-talk-harness'))
   session.append('turn/start', { turn: 1 })
   ctx.provide('systemPrompt', { tools: () => () => undefined, section: () => () => undefined } as never)

@@ -2,10 +2,10 @@
  * The talk host service: the `talk` Typert Remote namespace plus the speak
  * pipeline the tool and the announcement listeners share. It resolves the
  * effective engine, synthesizes local audio through `ctx.subprocess` (or
- * delegates to the browser voice), appends every utterance as a
- * `dsh-talk/speech` log-only session event, keeps an in-memory audio cache
- * for the client's `talk/audio` fetches, and applies the settings panel's
- * engine/language edits as append-only profile-patch operations.
+ * delegates to the browser voice), appends every utterance through the
+ * adaptive `dsh-talk/speech` log gate (see `speech.ts`), keeps an in-memory
+ * audio cache for the client's `talk/audio` fetches, and applies the settings
+ * panel's engine/language edits as append-only profile-patch operations.
  *
  * @module dsh-talk/service
  */
@@ -26,6 +26,7 @@ import {
   renderSettingsFragment,
   validateSettingsInput,
 } from './settings-patch.ts'
+import { appendSpeechEvent } from './speech.ts'
 import type { DshTalkSpeechEvent, SpeechReason, SpeechTtsEngine } from './speech.ts'
 import type { TalkAudio, TalkInterruptResult, TalkSettingsInput, TalkSettingsResult, TalkStatus, TalkTranscript } from './wire.ts'
 
@@ -92,8 +93,7 @@ declare module '@deepseek-ai/cordis' {
 }
 
 /**
- * Resolve the effective TTS engine: explicit override → configured engine →
- * `auto` prefers piper (configured model), then edge-tts, then the browser.
+ * Resolve the effective TTS engine: explicit override 鈫?configured engine 鈫? * `auto` prefers piper (configured model), then edge-tts, then the browser.
  *
  * @param explicit - tool-arg override, or undefined.
  * @param resolved - resolved config.
@@ -108,7 +108,7 @@ export function resolveTtsEngine(explicit: TtsEngine | undefined, resolved: Reso
 
 /**
  * Resolve the effective STT engine for host-side transcription: configured
- * engine → `auto` prefers funasr (configured endpoint), then whisper
+ * engine 鈫?`auto` prefers funasr (configured endpoint), then whisper
  * (configured model), then the browser's Web Speech.
  *
  * @param resolved - resolved config.
@@ -157,7 +157,8 @@ export class TalkService extends TypertRemoteService {
   /**
    * Speak one utterance: resolve the engine, synthesize locally or delegate
    * to the browser voice, cache the audio, and append the `dsh-talk/speech`
-   * session event (log-only; appended without the `ignorable` marker, see `speech.ts`).
+   * session event through the adaptive gate in `speech.ts` (log-only; skipped
+   * silently on hosts that cannot carry it).
    *
    * @param text - text to speak (sanitized and capped here).
    * @param options - engine/voice/reason/session/signal.
@@ -174,7 +175,7 @@ export class TalkService extends TypertRemoteService {
 
     if (engine === 'browser') {
       const event = this.speechEvent(utteranceId, this.browserDelivery(options.voice), spoken, 0, options.reason)
-      this.appendSpeechEvent(options.session, event)
+      this.recordSpeechEvent(options.session, event)
       return { spoken: true, engine: 'browser', audioBytes: 0, utteranceId }
     }
 
@@ -187,16 +188,16 @@ export class TalkService extends TypertRemoteService {
       const result = await synthesize(this.ctx.subprocess, this.resolved, localEngine, spoken, signal)
       const durationSec = Math.max(0, (Date.now() - startedAt) / 1000)
       this.cacheUtterance(utteranceId, result.mime, result.data, spoken, localEngine)
-      this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, result.data.byteLength, options.reason))
+      this.recordSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, result.data.byteLength, options.reason))
       return { spoken: true, engine: localEngine, audioBytes: result.data.byteLength, durationSec, utteranceId }
     } catch (error) {
       const failure = error instanceof EngineFailure ? error : new EngineFailure(sanitizeText(error instanceof Error ? error.message : String(error)), false)
       if (failure.aborted) {
-        this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, 0, options.reason, 'interrupted', true))
+        this.recordSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, 0, options.reason, 'interrupted', true))
         return { spoken: false, engine: localEngine, audioBytes: 0, error: 'interrupted', utteranceId }
       }
       if (this.resolved.ttsFallbackToBrowser) {
-        this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, this.browserDelivery(options.voice), spoken, 0, options.reason, failure.message))
+        this.recordSpeechEvent(options.session, this.speechEvent(utteranceId, this.browserDelivery(options.voice), spoken, 0, options.reason, failure.message))
         return {
           spoken: true,
           engine: 'browser',
@@ -205,7 +206,7 @@ export class TalkService extends TypertRemoteService {
           utteranceId,
         }
       }
-      this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, 0, options.reason, failure.message))
+      this.recordSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, 0, options.reason, failure.message))
       return { spoken: false, engine: localEngine, audioBytes: 0, error: failure.message, utteranceId }
     } finally {
       this.activeSyntheses.delete(utteranceId)
@@ -255,13 +256,11 @@ export class TalkService extends TypertRemoteService {
     }
   }
 
-  /** Append one log-only speech event; a disposed session must never kill speech. */
-  private appendSpeechEvent(session: Session | undefined, event: DshTalkSpeechEvent): void {
+  /** Append one log-only speech event through the adaptive gate; a disposed session must never kill speech. */
+  private recordSpeechEvent(session: Session | undefined, event: DshTalkSpeechEvent): void {
     if (session === undefined) return
     try {
-      // Two-argument append: the pinned 0.1.0-rc.6 peers have no append-envelope
-      // option; the two-argument form typechecks against rc.6 and newer builds.
-      session.append('dsh-talk/speech', event)
+      appendSpeechEvent(session, event)
     } catch (error) {
       this.ctx.logger.warn(`dsh-talk: failed to log speech event: ${sanitizeText(error instanceof Error ? error.message : String(error))}`)
     }
