@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🎙️ dsh-talk
 - **1024 store channel**: `npm i -g dsh1024` once, then `dsh1024 plugin --profile web add dsh-talk` (counts toward the [deepseek1024.com](https://deepseek1024.com) install ranking).
@@ -97,6 +97,9 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`; auto prefers piper, then edge-tts, then the browser voice |
 | `tts.rate` | `0` | Rate offset in percent (-50..50) for edge-tts/piper |
 | `tts.fallbackToBrowser` | `true` | Fall back to the browser voice when a local engine fails |
+| `tts.browser.voiceName` | *(none)* | Preferred browser voice name; an unknown name uses the platform default |
+| `tts.browser.rate` | `1` | Browser SpeechSynthesis rate (0.1..10) |
+| `tts.browser.pitch` | `1` | Browser SpeechSynthesis pitch (0..2) |
 | `tts.piper.modelPath` | *(none)* | piper voice model; required when the engine is `piper` |
 | `announce.enabled` | `true` | Master switch for event announcements |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | Which events are spoken |
@@ -119,8 +122,8 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 ## Permissions & data
 
 - **Permissions**: the plugin stores nothing but an in-memory, byte-capped audio cache; microphone permission is browser-mediated. The settings tab only appends patch fragments to the profile with a timestamped backup — never rewrites the file.
-- **Data**: audio never enters the model context or the session log. The `dsh-talk/speech` event carries the utterance id, engine, reason, size, and sanitized text only. All display/log surfaces redact credentials, JWTs, bearer headers, and temp paths.
-- **Network**: only the engines you configure are contacted. `edge-tts` performs network synthesis, FunASR uses its configured endpoint, and Chrome's `webkitSpeechRecognition` sends microphone audio to Google's servers for transcription; browser `speechSynthesis` playback remains local.
+- **Data**: audio never enters the model context or the session log. The `dsh-talk/speech` event carries the utterance id, engine, reason, size, sanitized text, and browser voice/rate/pitch when applicable. All display/log surfaces redact credentials, JWTs, bearer headers, and temp paths.
+- **Network**: only the engines you configure are contacted. `edge-tts` performs network synthesis, FunASR uses its configured endpoint, and Chrome's `webkitSpeechRecognition` sends microphone audio to Google's servers for transcription; browser `speechSynthesis` playback remains local.origin/main
 
 ## Security boundaries
 
@@ -144,7 +147,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests against the local harness checkout
 pnpm run typecheck:ci  # tsc against the published 0.1.1-rc.2 types (no paths)
-pnpm test           # vitest: 59 tests, 10 suites
+pnpm test           # vitest: 74 tests, 12 suites
 pnpm run build      # tsc declarations + tsdown bundles (lib/)
 pnpm run verify:self-contained  # dependency specs resolve from the registry
 pnpm run verify:artifacts       # built ESM faces + client ModuleLoader handshake

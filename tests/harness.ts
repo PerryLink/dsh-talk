@@ -11,6 +11,7 @@
 
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
+import { writeFile } from 'node:fs/promises'
 import SessionStore, { SessionId, type Session } from '@deepseek-ai/dsh-session'
 import {
   SubprocessRuntime,
@@ -31,6 +32,8 @@ export class FakeSubprocessRuntime extends SubprocessRuntime {
   nextExitCode = 0
   /** Scripted stderr text for the next spawn. */
   nextStderr = ''
+  /** When set, a spawn whose argv carries `--write-media <path>` writes these bytes there (successful local synthesis). */
+  nextSynthBytes: string | null = null
   /** Every spawn spec recorded. */
   spawns: SubprocessSpawnSpec[] = []
 
@@ -44,6 +47,13 @@ export class FakeSubprocessRuntime extends SubprocessRuntime {
 
   spawn(spec: SubprocessSpawnSpec): SubprocessHandle {
     this.spawns.push(spec)
+    let mediaWrite: Promise<void> = Promise.resolve()
+    if (this.nextSynthBytes !== null) {
+      const marker = spec.argv.indexOf('--write-media')
+      if (marker !== -1 && marker + 1 < spec.argv.length) {
+        mediaWrite = writeFile(spec.argv[marker + 1] as string, this.nextSynthBytes, 'binary')
+      }
+    }
     const stdout = this.nextStdout
     const stderr = this.nextStderr
     const exitCode = this.nextExitCode
@@ -61,7 +71,7 @@ export class FakeSubprocessRuntime extends SubprocessRuntime {
       stdout: undefined,
       stderr: undefined,
       collected,
-      done: Promise.resolve(outcome),
+      done: mediaWrite.then(() => outcome),
       terminate: () => undefined,
       waitForExit: async () => true,
     }

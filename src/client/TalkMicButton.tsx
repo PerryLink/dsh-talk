@@ -15,6 +15,7 @@ import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '../projection.ts'
 import { foldMic, initMic, type MicViewModel } from './present.ts'
 import { advanceSilence, isSpeechFrame, rmsOf, silenceTrips } from './vad.ts'
+import { selectBrowserVoice } from './browserVoice.ts'
 import type { TalkAudio, TalkInterruptResult, TalkStatus, TalkTranscript } from '../wire.ts'
 
 /** Registration-side injected face: the recorder's host/browser bindings. */
@@ -411,7 +412,13 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     if (speech.engine === 'browser') {
       if (typeof speechSynthesis !== 'undefined') {
         const utterance = new SpeechSynthesisUtterance(speech.text)
+        const voice = selectBrowserVoice(speechSynthesis.getVoices(), speech.voice)
+        if (voice !== undefined) utterance.voice = voice
+        if (speech.rate !== undefined) utterance.rate = speech.rate
+        if (speech.pitch !== undefined) utterance.pitch = speech.pitch
         speechSynthesis.speak(utterance)
+      } else {
+        console.warn('[dsh-talk] speechSynthesis unavailable')
       }
       return
     }

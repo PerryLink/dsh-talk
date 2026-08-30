@@ -47,6 +47,11 @@ interface StoredUtterance {
   engine: 'edge-tts' | 'piper'
 }
 
+/** Engine-specific delivery fields recorded with one speech event. */
+type SpeechDelivery =
+  | { readonly engine: 'browser'; readonly voice?: string; readonly rate: number; readonly pitch: number }
+  | { readonly engine: 'edge-tts' | 'piper' }
+
 /** Result of one speak request (the speak tool's canonical value). */
 export interface SpeakOutcome {
   /** Whether audio was produced or delegated. */
@@ -168,7 +173,7 @@ export class TalkService extends TypertRemoteService {
     const utteranceId = randomUUID()
 
     if (engine === 'browser') {
-      const event = this.speechEvent(utteranceId, 'browser', spoken, 0, options.reason)
+      const event = this.speechEvent(utteranceId, this.browserDelivery(options.voice), spoken, 0, options.reason)
       this.appendSpeechEvent(options.session, event)
       return { spoken: true, engine: 'browser', audioBytes: 0, utteranceId }
     }
@@ -182,16 +187,16 @@ export class TalkService extends TypertRemoteService {
       const result = await synthesize(this.ctx.subprocess, this.resolved, localEngine, spoken, signal)
       const durationSec = Math.max(0, (Date.now() - startedAt) / 1000)
       this.cacheUtterance(utteranceId, result.mime, result.data, spoken, localEngine)
-      this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, localEngine, spoken, result.data.byteLength, options.reason))
+      this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, result.data.byteLength, options.reason))
       return { spoken: true, engine: localEngine, audioBytes: result.data.byteLength, durationSec, utteranceId }
     } catch (error) {
       const failure = error instanceof EngineFailure ? error : new EngineFailure(sanitizeText(error instanceof Error ? error.message : String(error)), false)
       if (failure.aborted) {
-        this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, localEngine, spoken, 0, options.reason, 'interrupted', true))
+        this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, 0, options.reason, 'interrupted', true))
         return { spoken: false, engine: localEngine, audioBytes: 0, error: 'interrupted', utteranceId }
       }
       if (this.resolved.ttsFallbackToBrowser) {
-        this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, 'browser', spoken, 0, options.reason, failure.message))
+        this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, this.browserDelivery(options.voice), spoken, 0, options.reason, failure.message))
         return {
           spoken: true,
           engine: 'browser',
@@ -200,7 +205,7 @@ export class TalkService extends TypertRemoteService {
           utteranceId,
         }
       }
-      this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, localEngine, spoken, 0, options.reason, failure.message))
+      this.appendSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, 0, options.reason, failure.message))
       return { spoken: false, engine: localEngine, audioBytes: 0, error: failure.message, utteranceId }
     } finally {
       this.activeSyntheses.delete(utteranceId)
@@ -210,7 +215,7 @@ export class TalkService extends TypertRemoteService {
   /** Assemble one speech event payload. */
   private speechEvent(
     utteranceId: string,
-    engine: SpeechTtsEngine,
+    delivery: SpeechDelivery,
     text: string,
     audioBytes: number,
     reason: SpeechReason,
@@ -220,12 +225,33 @@ export class TalkService extends TypertRemoteService {
     return {
       kind: 'tts',
       utteranceId,
-      engine,
+      engine: delivery.engine,
       text,
       audioBytes,
       reason,
       ...(error !== undefined ? { error } : {}),
       ...(interrupted === true ? { interrupted: true } : {}),
+      ...(delivery.engine === 'browser' ? {
+        ...(delivery.voice !== undefined ? { voice: delivery.voice } : {}),
+        rate: delivery.rate,
+        pitch: delivery.pitch,
+      } : {}),
+    }
+  }
+
+  /**
+   * Browser delivery settings for one utterance: the per-call `voice` override
+   * wins over the configured `tts.browser.voiceName`; rate/pitch always ride
+   * along so the client needs no settings round-trip at playback time.
+   */
+  private browserDelivery(voiceOverride?: string): Extract<SpeechDelivery, { readonly engine: 'browser' }> {
+    return {
+      engine: 'browser',
+      ...(voiceOverride !== undefined
+        ? { voice: voiceOverride }
+        : this.resolved.browserVoiceName !== null ? { voice: this.resolved.browserVoiceName } : {}),
+      rate: this.resolved.browserRate,
+      pitch: this.resolved.browserPitch,
     }
   }
 
@@ -278,6 +304,11 @@ export class TalkService extends TypertRemoteService {
         fallbackToBrowser: this.resolved.ttsFallbackToBrowser,
         piperModel: this.resolved.piperModelPath,
         edgeTtsVoice: this.resolved.edgeTtsVoice,
+        browser: {
+          voiceName: this.resolved.browserVoiceName,
+          rate: this.resolved.browserRate,
+          pitch: this.resolved.browserPitch,
+        },
       },
       announce: {
         enabled: this.resolved.announceEnabled,

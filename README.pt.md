@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🎙️ dsh-talk
 - **Canal 1024 store**: `npm i -g dsh1024` uma vez, depois `dsh1024 plugin --profile web add dsh-talk` (conta para o ranking de instalações do [deepseek1024.com](https://deepseek1024.com)).
@@ -87,6 +87,9 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`; auto prefere piper, depois edge-tts, depois a voz do navegador |
 | `tts.rate` | `0` | Deslocamento de velocidade em porcentagem (-50..50) para edge-tts/piper |
 | `tts.fallbackToBrowser` | `true` | Cair para a voz do navegador quando um motor local falha |
+| `tts.browser.voiceName` | *(nenhuma)* | Nome preferido da voz do navegador; se não existir, usa o padrão da plataforma |
+| `tts.browser.rate` | `1` | Velocidade do SpeechSynthesis do navegador (0.1..10) |
+| `tts.browser.pitch` | `1` | Tom do SpeechSynthesis do navegador (0..2) |
 | `tts.piper.modelPath` | *(nenhuma)* | Modelo de voz piper; obrigatório com o motor `piper` |
 | `announce.enabled` | `true` | Interruptor mestre de anúncios |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | Quais eventos são falados |
@@ -109,8 +112,8 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 ## Permissões e dados
 
 - **Permissões**: o plugin guarda apenas uma cache de áudio em memória com limite de bytes; a permissão do microfone é mediada pelo navegador. A aba de configurações apenas anexa fragmentos ao patch do perfil com backup — nunca reescreve o arquivo.
-- **Dados**: o áudio nunca entra no contexto do modelo nem no registro de sessão. O evento `dsh-talk/speech` carrega apenas o id da fala, motor, razão, tamanho e texto saneado. Toda superfície de exibição/registro redige credenciais, JWT, cabeçalhos bearer e caminhos temporários.
-- **Rede**: apenas os motores que você configurar são contatados. `edge-tts` faz síntese pela rede, o FunASR usa seu endpoint configurado e o `webkitSpeechRecognition` do Chrome envia o áudio do microfone aos servidores do Google para transcrição; a reprodução de `speechSynthesis` do navegador permanece local.
+- **Dados**: o áudio nunca entra no contexto do modelo nem no registro de sessão. O evento `dsh-talk/speech` carrega o id da fala, motor, razão, tamanho, texto saneado e, quando aplicável, voz, velocidade e tom do navegador. Toda superfície de exibição/registro redige credenciais, JWT, cabeçalhos bearer e caminhos temporários.
+- **Rede**: apenas os motores que você configurar são contatados. `edge-tts` faz síntese pela rede, o FunASR usa seu endpoint configurado e o `webkitSpeechRecognition` do Chrome envia o áudio do microfone aos servidores do Google para transcrição; a reprodução de `speechSynthesis` do navegador permanece local.origin/main
 
 ## Limites de segurança
 
@@ -134,7 +137,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests contra o checkout local do harness
 pnpm run typecheck:ci  # tsc contra os tipos publicados 0.1.1-rc.2 (sem paths)
-pnpm test           # vitest: 59 testes, 10 suítes
+pnpm test           # vitest: 74 testes, 12 suítes
 pnpm run build      # declarações tsc + bundles tsdown (lib/)
 pnpm run verify:self-contained  # as specs de dependências resolvem pelo registry
 pnpm run verify:artifacts       # faces ESM construídas + handshake ModuleLoader do cliente

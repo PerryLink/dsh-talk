@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🎙️ dsh-talk
 - **1024 商店渠道**：先 `npm i -g dsh1024`，再 `dsh1024 plugin --profile web add dsh-talk`（计入 [deepseek1024.com](https://deepseek1024.com) 安装排行）。
@@ -96,6 +96,9 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`；auto 优先 piper，其次 edge-tts，最后浏览器语音 |
 | `tts.rate` | `0` | edge-tts/piper 语速偏移（百分比，-50..50） |
 | `tts.fallbackToBrowser` | `true` | 本地引擎失败时回退浏览器语音 |
+| `tts.browser.voiceName` | *(无)* | 首选浏览器语音名称；未找到时使用平台默认语音 |
+| `tts.browser.rate` | `1` | 浏览器 SpeechSynthesis 语速（0.1..10） |
+| `tts.browser.pitch` | `1` | 浏览器 SpeechSynthesis 音高（0..2） |
 | `tts.piper.modelPath` | *(无)* | piper 语音模型；引擎为 `piper` 时必填 |
 | `announce.enabled` | `true` | 事件播报总开关 |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | 播报哪些事件 |
@@ -118,8 +121,8 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 ## 权限与数据
 
 - **权限**：插件只保存内存中、字节受限的音频缓存；麦克风权限由浏览器管理。设置页签只向 profile 追加 patch 片段（带时间戳备份）——绝不重写文件。
-- **数据**：音频绝不进入模型上下文或会话日志。`dsh-talk/speech` 事件只携带朗读 id、引擎、原因、大小与脱敏文本。所有展示/日志面都会脱敏凭据、JWT、bearer 头与临时路径。
-- **网络**：只联系你配置的引擎。`edge-tts` 执行网络合成，FunASR 使用其配置的端点，而 Chrome 的 `webkitSpeechRecognition` 会将麦克风音频发送到 Google 服务器进行转写；浏览器的 `speechSynthesis` 播放仍在本机完成。
+- **数据**：音频绝不进入模型上下文或会话日志。`dsh-talk/speech` 事件携带朗读 id、引擎、原因、大小、脱敏文本，并在适用时携带浏览器语音、语速和音高。所有展示/日志面都会脱敏凭据、JWT、bearer 头与临时路径。
+- **网络**：只联系你配置的引擎。`edge-tts` 执行网络合成，FunASR 使用其配置的端点，而 Chrome 的 `webkitSpeechRecognition` 会将麦克风音频发送到 Google 服务器进行转写；浏览器的 `speechSynthesis` 播放仍在本机完成。origin/main
 
 ## 安全边界
 
@@ -143,7 +146,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc：src + tests，对照本地 harness checkout
 pnpm run typecheck:ci  # tsc：对照已发布的 0.1.1-rc.2 类型（无 paths）
-pnpm test           # vitest：59 个测试、10 个套件
+pnpm test           # vitest：74 个测试、12 个套件
 pnpm run build      # tsc 声明 + tsdown bundle（lib/）
 pnpm run verify:self-contained  # 依赖声明全部来自 registry
 pnpm run verify:artifacts       # 构建产物 ESM 面 + client ModuleLoader 握手

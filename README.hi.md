@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 🎙️ dsh-talk
 - **1024 स्टोर चैनल**: एक बार `npm i -g dsh1024`, फिर `dsh1024 plugin --profile web add dsh-talk` ([deepseek1024.com](https://deepseek1024.com) इंस्टॉल रैंकिंग में गिना जाता है)।
@@ -87,6 +87,9 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 | `tts.engine` | `auto` | `auto` / `browser` / `edge-tts` / `piper`; auto पहले piper, फिर edge-tts, फिर ब्राउज़र वॉइस |
 | `tts.rate` | `0` | edge-tts/piper के लिए गति ऑफ़सेट प्रतिशत में (-50..50) |
 | `tts.fallbackToBrowser` | `true` | स्थानीय इंजन विफल होने पर ब्राउज़र वॉइस पर गिरें |
+| `tts.browser.voiceName` | *(कोई नहीं)* | पसंदीदा ब्राउज़र वॉइस नाम; न मिलने पर प्लेटफ़ॉर्म डिफ़ॉल्ट उपयोग होता है |
+| `tts.browser.rate` | `1` | ब्राउज़र SpeechSynthesis गति (0.1..10) |
+| `tts.browser.pitch` | `1` | ब्राउज़र SpeechSynthesis पिच (0..2) |
 | `tts.piper.modelPath` | *(कोई नहीं)* | piper वॉइस मॉडल; `piper` इंजन के लिए आवश्यक |
 | `announce.enabled` | `true` | घोषणाओं का मास्टर स्विच |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | कौन से इवेंट बोले जाएँ |
@@ -109,8 +112,8 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 ## अनुमतियाँ और डेटा
 
 - **अनुमतियाँ**: प्लगइन केवल बाइट-सीमित इन-मेमोरी ऑडियो कैश रखता है; माइक अनुमति ब्राउज़र-मध्यस्थ है। सेटिंग्स टैब केवल प्रोफ़ाइल में पैच खंड जोड़ता है (टाइमस्टैम्प बैकअप सहित) — फ़ाइल कभी दोबारा नहीं लिखता।
-- **डेटा**: ऑडियो कभी मॉडल संदर्भ या सत्र लॉग में नहीं जाता। `dsh-talk/speech` इवेंट केवल उच्चारण id, इंजन, कारण, आकार और सैनिटाइज़ टेक्स्ट रखता है। हर डिस्प्ले/लॉग सतह क्रेडेंशियल, JWT, bearer हेडर और अस्थायी पथों को रिडैक्ट करती है।
-- **नेटवर्क**: केवल आपके कॉन्फ़िगर किए इंजन से संपर्क होता है। `edge-tts` नेटवर्क सिंथेसिस करता है, FunASR अपने कॉन्फ़िगर किए एंडपॉइंट का उपयोग करता है, और Chrome का `webkitSpeechRecognition` ट्रांसक्रिप्शन के लिए माइक्रोफ़ोन ऑडियो Google के सर्वर पर भेजता है; ब्राउज़र का `speechSynthesis` playback स्थानीय रहता है।
+- **डेटा**: ऑडियो कभी मॉडल संदर्भ या सत्र लॉग में नहीं जाता। `dsh-talk/speech` इवेंट उच्चारण id, इंजन, कारण, आकार, सैनिटाइज़ टेक्स्ट और लागू होने पर ब्राउज़र वॉइस, गति और पिच रखता है। हर डिस्प्ले/लॉग सतह क्रेडेंशियल, JWT, bearer हेडर और अस्थायी पथों को रिडैक्ट करती है।
+- **नेटवर्क**: केवल आपके कॉन्फ़िगर किए इंजन से संपर्क होता है। `edge-tts` नेटवर्क सिंथेसिस करता है, FunASR अपने कॉन्फ़िगर किए एंडपॉइंट का उपयोग करता है, और Chrome का `webkitSpeechRecognition` ट्रांसक्रिप्शन के लिए माइक्रोफ़ोन ऑडियो Google के सर्वर पर भेजता है; ब्राउज़र का `speechSynthesis` playback स्थानीय रहता है।origin/main
 
 ## सुरक्षा सीमाएँ
 
@@ -134,7 +137,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests स्थानीय हार्नेस चेकआउट के विरुद्ध
 pnpm run typecheck:ci  # tsc प्रकाशित 0.1.1-rc.2 प्रकारों के विरुद्ध (बिना paths)
-pnpm test           # vitest: 59 टेस्ट, 10 सुइट
+pnpm test           # vitest: 74 टेस्ट, 12 सुइट
 pnpm run build      # tsc घोषणाएँ + tsdown बंडल (lib/)
 pnpm run verify:self-contained  # निर्भरता स्पेक registry से हल होती हैं
 pnpm run verify:artifacts       # निर्मित ESM फ़ेस + क्लाइंट ModuleLoader हैंडशेक
