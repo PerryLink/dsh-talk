@@ -8,7 +8,11 @@
  * @module dsh-talk/client
  */
 
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
+// Type-only: declares the client `remote` service (with `$mount`) on the
+// cordis Context — the published assembly package that owns the merge on both
+// the 0.1.1-rc.2 line and the 0.1.2-alpha checkout.
+import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 // Type-only: pulls the 'settings.plugins.tab' SlotMap declaration into this
 // program so the tab registration typechecks against the real declaration.
@@ -55,18 +59,30 @@ export const name = 'dsh-talk'
 export const inject = ['slots', 'locale', 'remote']
 
 /**
+ * Minimal structural contract of the slot registry this client uses. Declared
+ * locally because the registry's owning package differs across host lines
+ * (the removed client runtime on 0.1.1-rc.2, the UI renderer on 0.1.2-alpha);
+ * the runtime contract is structural.
+ */
+interface SlotsFace {
+  inject(slot: string, factory: () => unknown): unknown
+  register(options: Record<string, unknown>, component: unknown): unknown
+}
+
+/**
  * Browser plugin body: dictionaries, the scoped stylesheet, the Remote
  * contribution mount, the mic-button slot, and the settings tab.
  *
  * @param ctx - client root context.
  */
-export async function apply(ctx: ClientContext): Promise<void> {
+export async function apply(ctx: Context): Promise<void> {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-talk: dictionaries')
   ctx.effect(() => installTalkStyles(), 'dsh-talk: stylesheet')
 
   // $mount registers the 'remote.talk' namespace service and owns its removal.
   await ctx.remote.$mount(TALK_REMOTE)
 
+  const slots = ctx.get('slots') as SlotsFace
   ctx.inject(['remote.talk', 'conversation'], (scope) => {
     const talk = scope.remote.talk
     const t = scope.locale.bind(NS)
@@ -107,14 +123,14 @@ export async function apply(ctx: ClientContext): Promise<void> {
     const applySettings: TalkSettingsTabInjected['applySettings'] = async (settings: TalkSettingsInput) =>
       unwrap<TalkSettingsResult>(await talk.applySettings(settings), 'applySettings')
 
-    scope.slots.inject('conversation.input.left', () => scope.slots.register({
+    slots.inject('conversation.input.left', () => slots.register({
       name: 'conversation.input.left',
       id: 'talk-mic',
       order: 20,
       inject: (): TalkMicInjected => ({ status, interrupt, transcribe, audio, setDraft, send, forSession }),
     }, TalkMicButton))
 
-    scope.slots.inject('settings.plugins.tab', () => scope.slots.register({
+    slots.inject('settings.plugins.tab', () => slots.register({
       name: 'settings.plugins.tab',
       id: 'talk',
       order: 50,
