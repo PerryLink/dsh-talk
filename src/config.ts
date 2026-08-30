@@ -27,6 +27,9 @@ export const DEFAULT_MAX_SPEAK_CHARS = 20_000
 /** Ceiling for one speak request. */
 export const MAX_SPEAK_CHARS = 100_000
 
+/** Default Web Speech silence window before dictation auto-finalises. */
+export const DEFAULT_SILENCE_FINALISE_MS = 4000
+
 /** Default announce-master switch. */
 export const DEFAULT_ANNOUNCE_ENABLED = true
 
@@ -77,6 +80,8 @@ export interface SttConfig {
   language?: string
   /** Show interim transcriptions while speaking (Web Speech; default true). */
   interim?: boolean
+  /** Silence window in ms after which continuous Web Speech dictation auto-finalises (default 4000). */
+  silenceFinaliseMs?: number
   /** FunASR HTTP inference server (used when engine resolves to funasr). */
   funasr?: {
     /** Full inference endpoint URL; required for the funasr engine. */
@@ -191,6 +196,8 @@ export interface ResolvedConfig {
   sttLanguage: string
   /** Show interim transcriptions. */
   sttInterim: boolean
+  /** Silence window in ms before continuous dictation auto-finalises. */
+  sttSilenceFinaliseMs: number
   /** FunASR inference endpoint, or null. */
   funasrUrl: string | null
   /** FunASR model name, or null for the server default. */
@@ -262,6 +269,7 @@ export const Config: z<Config> = z.object({
     engine: z.union(['auto', 'web', 'funasr', 'whisper'] as const).default('auto'),
     language: z.string().default('auto'),
     interim: z.boolean().default(true),
+    silenceFinaliseMs: z.number().min(500).max(15000).default(DEFAULT_SILENCE_FINALISE_MS),
     funasr: z.object({
       url: z.string(),
       model: z.string(),
@@ -381,6 +389,7 @@ export function resolveConfig(config: Config | undefined): ResolvedConfig {
     throw new Error(`dsh-talk: config.stt.language must be "auto" or a BCP-47 tag, got ${JSON.stringify(sttLanguage)}`)
   }
   const sttInterim = booleanOf(stt.interim, true, 'stt.interim')
+  const sttSilenceFinaliseMs = numberOf(stt.silenceFinaliseMs, DEFAULT_SILENCE_FINALISE_MS, 500, 15000, 'stt.silenceFinaliseMs')
 
   const funasrUrl = nullableStringOf(stt.funasr?.url, 'stt.funasr.url')
   const funasrModel = nullableStringOf(stt.funasr?.model, 'stt.funasr.model')
@@ -447,6 +456,7 @@ export function resolveConfig(config: Config | undefined): ResolvedConfig {
     sttEngine: sttEngineRaw,
     sttLanguage,
     sttInterim,
+    sttSilenceFinaliseMs,
     funasrUrl,
     funasrModel,
     whisperCommand,
