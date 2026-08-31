@@ -13,7 +13,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import Include from '@deepseek-ai/cordis-plugin-include'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
-import { CallId } from '@deepseek-ai/dsh-llm'
+import { ToolCallId as CallId } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { createRequire } from 'node:module'
 import { dirname, resolve } from 'node:path'
