@@ -1,6 +1,6 @@
 /**
  * The `dsh-talk/speech` session-log seat. Every utterance the plugin speaks
- * aloud — tool speech, turn-end/approval/error announcements — is appended as
+ * aloud 鈥?tool speech, turn-end/approval/error announcements 鈥?is appended as
  * a log-only session event, and the `talk:speech` projection over it drives
  * live playback in the client. The payload carries the utterance id, engine,
  * reason, size, and spoken text, so the voice loop is reconstructable from
@@ -14,8 +14,8 @@
  *   with the marker, so builds that do not know the type skip it on restore;
  * - envelope-less hosts (0.1.0-rc.6/rc.8, 0.1.1-rc.2, and 0.1.2-alpha.1,
  *   which removed the envelope and fails closed on unknown types at read)
- *   get no append — the `speak` tool results remain the reconstructable
- *   audit trail, and the `talk:speech` projection simply stays empty there.
+ *   get no append 鈥?the `speak` tool results remain the reconstructable
+ *   audit trail, and the `talk:speech` projection simply stays empty there. On 0.1.2-alpha.2 the envelope field is restored for stored-log read compatibility only - its Session.append still cannot stamp the marker, so the gate behavior is unchanged.
  *
  * @module dsh-talk/speech
  */
