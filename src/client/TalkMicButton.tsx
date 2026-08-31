@@ -42,6 +42,10 @@ export interface TalkMicInjected {
 
 /** Full component props assembled by the input-slot renderer. */
 export type TalkMicProps = PropsRuntime<'conversation.input.left'> & InjectFace<TalkMicInjected>
+  // The projection seat is structural: alpha.2 no longer carries `useProjection`
+  // on the input-zone standard kit, so the button reads it optionally and
+  // casts at the single call site.
+  & { readonly useProjection?: unknown }
 
 /** Structural face of the standard-kit input actions current master feeds every session-scope slot component. */
 interface RuntimeInputActions {
@@ -404,7 +408,15 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
   }, [settings, recording])
 
   // Playback: fresh utterances from the talk:speech projection.
-  const speech = useProjection('talk:speech')
+  const readProjection = useProjection as unknown as (unit: 'talk:speech') => {
+    utteranceId: string
+    engine?: string
+    text?: string
+    voice?: string
+    rate?: number
+    pitch?: number
+  } | null | undefined
+  const speech = readProjection('talk:speech')
   const playedRef = useRef<string | null>(null)
   useEffect(() => {
     if (speech === null || speech === undefined || speech.utteranceId === playedRef.current) return

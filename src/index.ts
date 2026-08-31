@@ -18,7 +18,6 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { ApprovalOutcome, ApprovalRequest } from '@deepseek-ai/dsh-user-approval'
 import type {} from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-subprocess'
 import type {} from '@deepseek-ai/dsh-session'
@@ -108,11 +107,15 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   })
 
   // Approval announcement: waterfall listener — always delegates with next()
-  // and never blocks the gate on speech.
-  ctx.on('approval/request', (request: ApprovalRequest, next: () => Promise<ApprovalOutcome>) => {
+  // and never blocks the gate on speech. The 0.1.2-alpha.2 waterfall carries
+  // the ApprovalRequestEvent payload; the listener types it by inference.
+  ctx.on('approval/request', (request, next) => {
     const outcome = next()
     if (resolved.announceEnabled && resolved.announceOnApproval) {
-      void service.speak(resolved.messageApproval, { reason: 'approval', session: request.agent.session }).catch(() => {})
+      const session = (request.agent as { session?: unknown }).session
+      if (session !== undefined) {
+        void service.speak(resolved.messageApproval, { reason: 'approval', session: session as never }).catch(() => {})
+      }
     }
     return outcome
   })
