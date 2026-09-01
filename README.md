@@ -26,7 +26,7 @@
 
 | Surface | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.1-rc.2` (primary target); `0.1.2-alpha.2` runs with the speech-log gate active (see Known limitations) 0.1.2-alpha.2 (adapted 2026-08-31): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged. |
+| Harness | DeepSeek Harness `0.1.1-rc.2` (primary target); `0.1.2-alpha.3` runs with the speech-log gate active (see Known limitations) 0.1.2-alpha.3 (adapted 2026-09-01): the session envelope keeps its ignorable field for stored-log read compatibility only - Session.append still cannot stamp it, so audit-gate behavior is unchanged. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Browser | Web Speech + MediaRecorder (Chrome/Edge best); host transcription/TTS engines for the rest |
 
@@ -130,7 +130,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 - **Model-visible ⟺ logged** — the model sees only the speak tool's canonical value and render text. The `dsh-talk/speech` event is appended only when the host can carry it (see Host compatibility); the `tool/call` + `tool/result` events always remain the reconstructable trail.
 - **Approval announcements never block** — the `approval/request` listener always calls `next()`.
 - **Sanitized output** — credentials and temp audio paths never reach logs or displays.
-- **Host compatibility** — the `dsh-talk/speech` event is appended through an adaptive gate. Hosts whose known-type vocabulary covers the event append it plainly; hosts with the `ignorable` append option append it with the marker; envelope-less hosts — every released line through `0.1.1-rc.2`, and `0.1.2-alpha.2`, which removed the envelope and fails closed on unknown types — get no append, so speech can never pollute the session log on those lines. There, the live playback history stays empty and the speak tool results are the reconstructable audit trail.
+- **Host compatibility** — the `dsh-talk/speech` event is appended through an adaptive gate. Hosts whose known-type vocabulary covers the event append it plainly; hosts with the `ignorable` append option append it with the marker; envelope-less hosts — every released line through `0.1.1-rc.2`, and the `0.1.2-alpha` line, whose Session.append cannot stamp the ignorable marker even though the envelope field is retained for read compatibility — get no append, so speech can never pollute the session log on those lines. There, the live playback history stays empty and the speak tool results are the reconstructable audit trail.
 - **Fail loud** — invalid engines, out-of-range values, and engines configured without their required model/endpoint fail the mount.
 
 ## Known limitations
@@ -139,7 +139,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 - **Local engines are your install**: `edge-tts`, `piper`, and `whisper.cpp` executables and models must be installed separately.
 - **Recording format**: the browser records with its native MediaRecorder codec; whisper.cpp may require a WAV-configured recorder or a server-side conversion for other formats.
 - **Settings apply on reload**: the settings tab appends to the profile patch; a profile reload (or web-app restart) activates the changes.
-- **Live playback history is empty on envelope-less hosts**: on `0.1.1-rc.2` and `0.1.2-alpha.2` the host vocabulary does not know `dsh-talk/speech`, so the gate writes nothing and the client's session-scoped playback list stays empty. Speech itself, the mic, the settings tab, and the tool are unaffected.
+- **Live playback history is empty on envelope-less hosts**: on `0.1.1-rc.2` and the `0.1.2-alpha` line the host vocabulary does not know `dsh-talk/speech`, so the gate writes nothing and the client's session-scoped playback list stays empty. Speech itself, the mic, the settings tab, and the tool are unaffected.
 - **Legacy logs written by dsh-talk ≤ 0.2.1 may need repair before cold load**: versions through `0.2.1` appended unmarked `dsh-talk/speech` events. On hosts `0.1.0-rc.7` and newer, a session whose log already contains them fails its next cold load with `SessionFormatUnsupportedError`. Repair: stop the host, back up the session's `.jsonl` log, add `"ignorable":true` as a top-level member of every JSON line whose `"type"` is `"dsh-talk/speech"` (for example, insert `"ignorable":true,` right after the opening `{`), then reopen the session. Nothing else changes and nothing is lost; new appends from this version never add unmarked events.
 
 ## Development
@@ -147,7 +147,7 @@ All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cord
 ```sh
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests against the local harness checkout
-pnpm run typecheck:ci  # tsc against the published 0.1.1-rc.2 types (no paths)
+pnpm run typecheck:ci  # tsc against the published 0.1.2-alpha.3 types (no paths)
 pnpm test           # vitest: 77 tests, 13 suites
 pnpm run build      # tsc declarations + tsdown bundles (lib/)
 pnpm run verify:self-contained  # dependency specs resolve from the registry

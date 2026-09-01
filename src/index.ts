@@ -107,7 +107,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   })
 
   // Approval announcement: waterfall listener — always delegates with next()
-  // and never blocks the gate on speech. The 0.1.2-alpha.2 waterfall carries
+  // and never blocks the gate on speech. The 0.1.2-alpha.3 waterfall carries
   // the ApprovalRequestEvent payload; the listener types it by inference.
   ctx.on('approval/request', (request, next) => {
     const outcome = next()

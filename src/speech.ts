@@ -12,10 +12,10 @@
  * - hosts whose known-type set covers the vocabulary append plainly;
  * - hosts with an `ignorable` append option (pre-0.1.2 master builds) append
  *   with the marker, so builds that do not know the type skip it on restore;
- * - envelope-less hosts (0.1.0-rc.6/rc.8, 0.1.1-rc.2, and 0.1.2-alpha.1,
+ * - envelope-less hosts (0.1.0-rc.6/rc.8, 0.1.1-rc.2, and the 0.1.2-alpha line,
  *   which removed the envelope and fails closed on unknown types at read)
  *   get no append — the `speak` tool results remain the reconstructable
- *   audit trail, and the `talk:speech` projection simply stays empty there. On 0.1.2-alpha.2 the envelope field is restored for stored-log read compatibility only - its Session.append still cannot stamp the marker, so the gate behavior is unchanged.
+ *   audit trail, and the `talk:speech` projection simply stays empty there. On 0.1.2-alpha.3 the envelope field is retained for stored-log read compatibility only - its Session.append still cannot stamp the marker, so the gate behavior is unchanged.
  *
  * @module dsh-talk/speech
  */

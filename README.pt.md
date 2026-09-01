@@ -25,7 +25,7 @@
 
 | Superfície | Status |
 |---|---|
-| Harness | DeepSeek Harness `0.1.1-rc.2` (alvo principal); `0.1.2-alpha.2` roda com a comporta do registro de fala ativa (ver Limitações conhecidas) 0.1.2-alpha.2 (adaptado em 2026-08-31): o envelope de sessão mantém seu campo ignorable apenas para compatibilidade de leitura de logs armazenados - o Session.append ainda não consegue estampá-lo, então o comportamento da porta não muda. |
+| Harness | DeepSeek Harness `0.1.1-rc.2` (alvo principal); `0.1.2-alpha.3` roda com a comporta do registro de fala ativa (ver Limitações conhecidas) 0.1.2-alpha.3 (adaptado em 2026-09-01): o envelope de sessão mantém seu campo ignorable apenas para compatibilidade de leitura de logs armazenados - o Session.append ainda não consegue estampá-lo, então o comportamento da porta não muda. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Navegador | Web Speech + MediaRecorder (melhor no Chrome/Edge); motores de transcrição/TTS do host para o resto |
 
@@ -120,7 +120,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 - **Visível para o modelo ⟺ registrado** — o modelo vê apenas o valor canônico e o texto renderizado da ferramenta speak. O evento `dsh-talk/speech` é anexado apenas quando o host pode transportá-lo (ver Compatibilidade do host); os eventos `tool/call` + `tool/result` continuam sendo sempre o rastro reconstruível.
 - **Anúncios de aprovação nunca bloqueiam** — o listener de `approval/request` sempre chama `next()`.
 - **Saída saneada** — credenciais e caminhos temporários de áudio nunca chegam a registros ou telas.
-- **Compatibilidade do host** — o evento `dsh-talk/speech` é anexado por uma comporta adaptativa. Hosts cujo vocabulário de tipos conhecidos cobre o evento o anexam diretamente; hosts com a opção `ignorable` o anexam com a marca; hosts sem envelope — toda linha publicada até `0.1.1-rc.2`, e `0.1.2-alpha.2`, que removeu o envelope e falha fechado para tipos desconhecidos — não recebem nenhum append, de modo que a fala nunca pode poluir o registro de sessão nessas linhas. Neles o histórico de reprodução ao vivo fica vazio e os resultados da ferramenta speak são o rastro reconstruível.
+- **Compatibilidade do host** — o evento `dsh-talk/speech` é anexado por uma comporta adaptativa. Hosts cujo vocabulário de tipos conhecidos cobre o evento o anexam diretamente; hosts com a opção `ignorable` o anexam com a marca; hosts sem envelope — toda linha publicada até `0.1.1-rc.2`, e a linha `0.1.2-alpha`, cujo Session.append não consegue estampar o marcador ignorable embora o campo do envelope seja mantido para compatibilidade de leitura — não recebem nenhum append, de modo que a fala nunca pode poluir o registro de sessão nessas linhas. Neles o histórico de reprodução ao vivo fica vazio e os resultados da ferramenta speak são o rastro reconstruível.
 - **Falha ruidosa** — motores inválidos, valores fora de faixa e motores sem seu modelo/endpoint obrigatório falham ao montar.
 
 ## Limitações conhecidas
@@ -129,7 +129,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 - **Motores locais são instalação sua**: os executáveis e modelos de `edge-tts`, `piper` e `whisper.cpp` devem ser instalados à parte.
 - **Formato de gravação**: o navegador grava com seu codec nativo do MediaRecorder; o whisper.cpp pode exigir um gravador WAV ou conversão no servidor.
 - **Configurações aplicam ao recarregar**: a aba anexa ao patch do perfil; um reload do perfil (ou reinício da web) ativa as mudanças.
-- **O histórico de reprodução ao vivo fica vazio em hosts sem envelope**: em `0.1.1-rc.2` e `0.1.2-alpha.2` o vocabulário do host não conhece `dsh-talk/speech`, então a comporta não escreve nada e a lista de reprodução da sessão no cliente fica vazia. A fala em si, o microfone, a aba de configurações e a ferramenta não são afetados.
+- **O histórico de reprodução ao vivo fica vazio em hosts sem envelope**: em `0.1.1-rc.2` e na linha `0.1.2-alpha` o vocabulário do host não conhece `dsh-talk/speech`, então a comporta não escreve nada e a lista de reprodução da sessão no cliente fica vazia. A fala em si, o microfone, a aba de configurações e a ferramenta não são afetados.
 - **Registros antigos escritos pelo dsh-talk ≤ 0.2.1 podem exigir reparo antes do carregamento a frio**: versões até `0.2.1` anexavam eventos `dsh-talk/speech` sem marca. Em hosts `0.1.0-rc.7` ou mais recentes, uma sessão cujo registro já os contém falha no próximo carregamento a frio com `SessionFormatUnsupportedError`. Reparação: pare o host, faça cópia do registo `.jsonl` da sessão, acrescente `"ignorable":true` como membro de topo em cada linha JSON cujo `"type"` seja `"dsh-talk/speech"` (por exemplo, insira `"ignorable":true,` logo a seguir à `{` inicial) e reabra a sessão. Nada mais muda e nada se perde; novos appends desta versão nunca adicionam eventos sem marca.
 
 ## Desenvolvimento
@@ -137,7 +137,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 ```sh
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests contra o checkout local do harness
-pnpm run typecheck:ci  # tsc contra os tipos publicados 0.1.1-rc.2 (sem paths)
+pnpm run typecheck:ci  # tsc contra os tipos publicados 0.1.2-alpha.3 (sem paths)
 pnpm test           # vitest: 77 testes, 13 suítes
 pnpm run build      # declarações tsc + bundles tsdown (lib/)
 pnpm run verify:self-contained  # as specs de dependências resolvem pelo registry

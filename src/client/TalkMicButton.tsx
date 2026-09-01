@@ -42,9 +42,9 @@ export interface TalkMicInjected {
 
 /** Full component props assembled by the input-slot renderer. */
 export type TalkMicProps = PropsRuntime<'conversation.input.left'> & InjectFace<TalkMicInjected>
-  // The projection seat is structural: alpha.2 no longer carries `useProjection`
-  // on the input-zone standard kit, so the button reads it optionally and
-  // casts at the single call site.
+  // The projection seat is structural: the alpha.3 session kit carries
+  // `useProjection` on the input-zone standard kit again, but the button still
+  // reads it optionally and casts at the single call site.
   & { readonly useProjection?: unknown }
 
 /** Structural face of the standard-kit input actions current master feeds every session-scope slot component. */
