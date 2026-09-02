@@ -54,7 +54,7 @@ describe('apply — assembly', () => {
     expect(outcome).toBe('rejected')
     // The announcement is fire-and-forget speech; give the pipeline a beat.
     await new Promise(resolve => setTimeout(resolve, 50))
-    const speech = harness.session.events.filter(event => event.type === 'dsh-talk/speech')
+    const speech = harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech')
     expect(speech.some(event => (event.data as { reason: string }).reason === 'approval')).toBe(true)
   })
 
@@ -63,15 +63,15 @@ describe('apply — assembly', () => {
     const agent = makeAgent(harness.session)
     harness.ctx.emit('agent/status', { agent, status: 'running' })
     harness.ctx.emit('agent/status', { agent, status: 'idle' })
-    const speech = harness.session.events.filter(event => event.type === 'dsh-talk/speech')
+    const speech = harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech')
     expect(speech.some(event => (event.data as { reason: string }).reason === 'turn-end')).toBe(true)
   })
 
   it('stays silent for an idle observation without a prior running', async () => {
     const harness = await mountHarness()
-    const before = harness.session.events.filter(event => event.type === 'dsh-talk/speech').length
+    const before = harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech').length
     harness.ctx.emit('agent/status', { agent: makeAgent(harness.session), status: 'idle' })
-    const after = harness.session.events.filter(event => event.type === 'dsh-talk/speech').length
+    const after = harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech').length
     expect(after).toBe(before)
   })
 

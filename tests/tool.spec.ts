@@ -54,14 +54,14 @@ describe('speak tool', () => {
     expect(value.engine).toBe('browser')
     expect(value.audioBytes).toBe(0)
     // Model-visible ⟺ logged: the utterance landed in the session log.
-    const speech = harness.session.events.filter(event => event.type === 'dsh-talk/speech')
+    const speech = harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech')
     expect(speech.length).toBeGreaterThan(0)
   })
 
   it('carries browser delivery settings and the per-call voice override in the speech event', async () => {
     const harness = await mountHarness({ tts: { browser: { voiceName: 'Configured Voice', rate: 1.5, pitch: 0.8 } } })
     await callTool(harness, { text: 'hello', engine: 'browser' })
-    let data = (harness.session.events.filter(event => event.type === 'dsh-talk/speech').at(-1)?.data ?? {}) as {
+    let data = (harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech').at(-1)?.data ?? {}) as {
       voice?: string
       rate?: number
       pitch?: number
@@ -70,7 +70,7 @@ describe('speak tool', () => {
     expect(data.rate).toBe(1.5)
     expect(data.pitch).toBe(0.8)
     await callTool(harness, { text: 'hello again', engine: 'browser', voice: 'Override Voice' })
-    data = (harness.session.events.filter(event => event.type === 'dsh-talk/speech').at(-1)?.data ?? {}) as typeof data
+    data = (harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech').at(-1)?.data ?? {}) as typeof data
     expect(data.voice).toBe('Override Voice')
     expect(data.rate).toBe(1.5)
     expect(data.pitch).toBe(0.8)
@@ -83,7 +83,7 @@ describe('speak tool', () => {
     expect(result.isError).toBe(false)
     if (result.isError) throw new Error('expected successful local synthesis')
     expect(result.value).toMatchObject({ spoken: true, engine: 'edge-tts' })
-    const data = (harness.session.events.filter(event => event.type === 'dsh-talk/speech').at(-1)?.data ?? {}) as Record<string, unknown>
+    const data = (harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech').at(-1)?.data ?? {}) as Record<string, unknown>
     expect(data.engine).toBe('edge-tts')
     expect('voice' in data).toBe(false)
     expect('rate' in data).toBe(false)
