@@ -38,6 +38,7 @@ export const name = 'talk'
 /** Hard services: the tool registry and the subprocess service. */
 export const inject = ['tools', 'subprocess']
 
+// Service Definition — public contract: the talk service face, the speak tool, and the wire vocabularies.
 export { Config, resolveConfig, type Config as TalkConfig, type ResolvedConfig } from './config.ts'
 export { TalkService, resolveSttEngine, resolveTtsEngine, type SpeakOptions, type SpeakOutcome } from './service.ts'
 export { speakTool, renderSpeak } from './tool.ts'
@@ -62,6 +63,7 @@ export type { TalkSpeechProjection, TalkSpeechProjectionState } from './projecti
 export async function apply(ctx: Context, config: Config): Promise<void> {
   const resolved = resolveConfig(config)
 
+  // Service Provider — registration: mount the talk service and register the speak tool.
   // Mount the talk service: the Service constructor self-registers; the
   // function plugin body must return nothing (a non-disposer return would
   // be rejected as an invalid effect).
@@ -88,6 +90,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
     }), 'dsh-talk: talk:speech projection')
   })
 
+  // Consumer — the announcement listeners drive the talk service from host events.
   // Turn-completion announcement: idle after an observed running transition.
   const runningAgents = new Set<Agent>()
   ctx.on('agent/status', ({ agent, status }) => {
