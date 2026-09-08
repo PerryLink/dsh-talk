@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- The `SessionFormatUnsupportedError` cold-load risk for newly written logs: unmarked `dsh-talk/speech` events are never appended anymore (legacy logs written by 鈮?0.2.1 still follow the documented repair steps).
+- The `SessionFormatUnsupportedError` cold-load risk for newly written logs: unmarked `dsh-talk/speech` events are never appended anymore (legacy logs written by ≤ 0.2.1 still follow the documented repair steps).
 
 ## [0.2.1] - 2026-08-27
 
