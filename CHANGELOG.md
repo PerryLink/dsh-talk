@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.7] - 2026-09-08
+
+### Docs
+
+- Repair GBK mojibake in a historical CHANGELOG entry: the less-or-equal sign (U+2264) was corrupted to the U+922E U+003F marker pair; restored to the clean pre-corruption text; no behavior change.
+
+
 ## [0.3.6] - 2026-09-07
 
 ### Docs
