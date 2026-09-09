@@ -68,7 +68,6 @@ export class FakeSubprocessRuntime extends SubprocessRuntime {
     }
     const outcome: SubprocessOutcome = { exitCode, signal: null }
     return {
-      pid: 7777,
       stdin: undefined,
       stdout: undefined,
       stderr: undefined,
