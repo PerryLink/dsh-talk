@@ -25,7 +25,7 @@
 
 | सतह | स्थिति |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.3-alpha.1` (GitHub tag, 2026-09-06 को सत्यापित: पूर्ण gate chain + profile install smoke)। npm निर्भरता लाइन `0.1.2-rc.1`, peers `>=0.1.2-rc.1 <0.2.0`। |
+| Harness | DeepSeek Harness `dsh-v0.1.5-alpha.1` (GitHub tag, 2026-09-09 को सत्यापित: पूर्ण gate chain + profile install smoke)। npm निर्भरता लाइन `0.1.2-rc.1`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`। |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | ब्राउज़र | Web Speech + MediaRecorder (Chrome/Edge में सर्वश्रेष्ठ); बाकी के लिए host के ट्रांसक्रिप्शन/TTS इंजन |
 

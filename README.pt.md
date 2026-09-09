@@ -25,7 +25,7 @@
 
 | Superfície | Status |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.3-alpha.1` (tag do GitHub, verificado em 2026-09-06: cadeia completa de gates + smoke de instalação do perfil). Linha de dependências npm `0.1.2-rc.1`, peers `>=0.1.2-rc.1 <0.2.0`. |
+| Harness | DeepSeek Harness `dsh-v0.1.5-alpha.1` (tag do GitHub, verificado em 2026-09-09: cadeia completa de gates + smoke de instalação do perfil). Linha de dependências npm `0.1.2-rc.1`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`. |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | Navegador | Web Speech + MediaRecorder (melhor no Chrome/Edge); motores de transcrição/TTS do host para o resto |
 

@@ -25,7 +25,7 @@
 
 | 方面 | 状态 |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.3-alpha.1`（GitHub tag，2026-09-06 核验：完整门禁链 + profile 安装冒烟）。npm 依赖线 `0.1.2-rc.1`，peers `>=0.1.2-rc.1 <0.2.0`。 |
+| Harness | DeepSeek Harness `dsh-v0.1.5-alpha.1`（GitHub tag，2026-09-09 核验：完整门禁链 + profile 安装冒烟）。npm 依赖线 `0.1.2-rc.1`，peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`。 |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | 浏览器 | Web Speech + MediaRecorder（Chrome/Edge 最佳）；其余场景用宿主侧转写/TTS 引擎 |
 
