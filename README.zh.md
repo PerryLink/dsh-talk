@@ -26,7 +26,7 @@
 
 | 方面 | 状态 |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.5-alpha.1`（GitHub tag，2026-09-09 核验：完整门禁链 + profile 安装冒烟）。npm 依赖线 `0.1.2-rc.1`，peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`。 |
+| Harness | DeepSeek Harness `dsh-v0.1.5-rc.1`（GitHub tag，2026-09-10 核验：完整门禁链 + profile 安装冒烟）。npm 依赖线 `0.1.5-rc.1`，peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`。 |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | 浏览器 | Web Speech + MediaRecorder（Chrome/Edge 最佳）；其余场景用宿主侧转写/TTS 引擎 |
 
@@ -147,7 +147,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 ```sh
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc：src + tests，对照本地 harness checkout
-pnpm run typecheck:ci  # tsc：对照已发布的 0.1.2-rc.1 类型（无 paths）
+pnpm run typecheck:ci  # tsc：对照已发布的 0.1.5-rc.1 类型（无 paths）
 pnpm test           # vitest：77 个测试、13 个套件
 pnpm run build      # tsc 声明 + tsdown bundle（lib/）
 pnpm run verify:self-contained  # 依赖声明全部来自 registry

@@ -26,7 +26,7 @@
 
 | सतह | स्थिति |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.5-alpha.1` (GitHub tag, 2026-09-09 को सत्यापित: पूर्ण gate chain + profile install smoke)। npm निर्भरता लाइन `0.1.2-rc.1`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`। |
+| Harness | DeepSeek Harness `dsh-v0.1.5-rc.1` (GitHub tag, 2026-09-10 को सत्यापित: पूर्ण gate chain + profile install smoke)। npm निर्भरता लाइन `0.1.5-rc.1`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`। |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | ब्राउज़र | Web Speech + MediaRecorder (Chrome/Edge में सर्वश्रेष्ठ); बाकी के लिए host के ट्रांसक्रिप्शन/TTS इंजन |
 
@@ -138,7 +138,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 ```sh
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests स्थानीय हार्नेस चेकआउट के विरुद्ध
-pnpm run typecheck:ci  # tsc प्रकाशित 0.1.2-rc.1 प्रकारों के विरुद्ध (बिना paths)
+pnpm run typecheck:ci  # tsc प्रकाशित 0.1.5-rc.1 प्रकारों के विरुद्ध (बिना paths)
 pnpm test           # vitest: 77 टेस्ट, 13 सुइट
 pnpm run build      # tsc घोषणाएँ + tsdown बंडल (lib/)
 pnpm run verify:self-contained  # निर्भरता स्पेक registry से हल होती हैं
