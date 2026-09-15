@@ -47,6 +47,10 @@ export class FakeSubprocessRuntime extends SubprocessRuntime {
     return Promise.resolve(`C:\\Windows\\System32\\${command}`)
   }
 
+  async terminalEnvironment(): Promise<{ platform: 'windows' }> {
+    return { platform: 'windows' }
+  }
+
   spawn(spec: SubprocessSpawnSpec): SubprocessHandle {
     this.spawns.push(spec)
     let mediaWrite: Promise<void> = Promise.resolve()
@@ -67,15 +71,17 @@ export class FakeSubprocessRuntime extends SubprocessRuntime {
       stderr: readerOf(stderr),
     }
     const outcome: SubprocessOutcome = { exitCode, signal: null }
-    return {
+    const handle = {
       stdin: undefined,
       stdout: undefined,
       stderr: undefined,
+      control: undefined,
       collected,
       done: mediaWrite.then(() => outcome),
       terminate: () => undefined,
       waitForExit: async () => true,
     }
+    return handle
   }
 
   spawnTerminal(): never {

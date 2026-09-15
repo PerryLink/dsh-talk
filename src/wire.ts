@@ -13,6 +13,17 @@
 import { z } from 'zod'
 import type { InvocationDescriptor } from '@deepseek-ai/dsh-typert-protocol'
 
+/**
+ * Strict wire codec carrying BOTH published and checkout faces: the
+ * `schema` field feeds the npm-published 0.1.5-rc.2 line, `create` feeds the
+ * checkout 0.1.6-alpha.1+ line (schemas materialize lazily on first use).
+ * Built through a variable, so neither typecheck ruler flags the other
+ * face's field as excess.
+ */
+function strictWire<T>(typeSymbol: string, schema: T) {
+  return Object.freeze({ ...{ mode: 'strict' as const, typeSymbol, schema }, create: () => schema })
+}
+
 /** The engines the settings panel may select for speech-to-text. */
 export const STT_ENGINES = ['auto', 'web', 'funasr', 'whisper'] as const
 
@@ -232,11 +243,7 @@ export const TALK_STATUS_DESCRIPTOR = Object.freeze({
   method: 'status',
   invocation: Object.freeze({ kind: 'direct' }),
   parameters: Object.freeze([]),
-  result: Object.freeze({
-    mode: 'strict',
-    typeSymbol: 'dsh-talk/types#TalkStatus',
-    schema: TALK_STATUS_SCHEMA,
-  }),
+  result: strictWire('dsh-talk/types#TalkStatus', TALK_STATUS_SCHEMA),
   sourceLocation: SOURCE,
 } as const) satisfies InvocationDescriptor
 
@@ -251,18 +258,9 @@ export const TALK_AUDIO_DESCRIPTOR = Object.freeze({
     name: 'utteranceId',
     wire: 'utteranceId',
     source: 'json',
-    codec: Object.freeze({
-      mode: 'strict',
-      typeSymbol: 'dsh-talk/types#TalkAudioUtteranceId',
-      schema: z.string(),
-    }),
+    codec: strictWire('dsh-talk/types#TalkAudioUtteranceId', z.string()),
   } satisfies InvocationDescriptor['parameters'][number])]),
-  result: Object.freeze({
-    mode: 'strict',
-    typeSymbol: 'dsh-talk/types#TalkAudio',
-    // Null when the utterance was evicted from the in-memory cache.
-    schema: z.union([TALK_AUDIO_SCHEMA, z.null()]),
-  }),
+  result: strictWire('dsh-talk/types#TalkAudio', z.union([TALK_AUDIO_SCHEMA, z.null()])),
   sourceLocation: SOURCE,
 } as const) satisfies InvocationDescriptor
 
@@ -277,17 +275,9 @@ export const TALK_TRANSCRIBE_DESCRIPTOR = Object.freeze({
     name: 'audioData',
     wire: 'audioData',
     source: 'json',
-    codec: Object.freeze({
-      mode: 'strict',
-      typeSymbol: 'dsh-talk/types#TalkTranscribeAudioData',
-      schema: z.string(),
-    }),
+    codec: strictWire('dsh-talk/types#TalkTranscribeAudioData', z.string()),
   } satisfies InvocationDescriptor['parameters'][number])]),
-  result: Object.freeze({
-    mode: 'strict',
-    typeSymbol: 'dsh-talk/types#TalkTranscript',
-    schema: TALK_TRANSCRIPT_SCHEMA,
-  }),
+  result: strictWire('dsh-talk/types#TalkTranscript', TALK_TRANSCRIPT_SCHEMA),
   sourceLocation: SOURCE,
 } as const) satisfies InvocationDescriptor
 
@@ -302,17 +292,9 @@ export const TALK_APPLY_SETTINGS_DESCRIPTOR = Object.freeze({
     name: 'settings',
     wire: 'settings',
     source: 'json',
-    codec: Object.freeze({
-      mode: 'strict',
-      typeSymbol: 'dsh-talk/types#TalkSettingsInput',
-      schema: TALK_SETTINGS_INPUT_SCHEMA,
-    }),
+    codec: strictWire('dsh-talk/types#TalkSettingsInput', TALK_SETTINGS_INPUT_SCHEMA),
   } satisfies InvocationDescriptor['parameters'][number])]),
-  result: Object.freeze({
-    mode: 'strict',
-    typeSymbol: 'dsh-talk/types#TalkSettingsResult',
-    schema: TALK_SETTINGS_RESULT_SCHEMA,
-  }),
+  result: strictWire('dsh-talk/types#TalkSettingsResult', TALK_SETTINGS_RESULT_SCHEMA),
   sourceLocation: SOURCE,
 } as const) satisfies InvocationDescriptor
 
@@ -324,11 +306,7 @@ export const TALK_INTERRUPT_DESCRIPTOR = Object.freeze({
   method: 'interrupt',
   invocation: Object.freeze({ kind: 'direct' }),
   parameters: Object.freeze([]),
-  result: Object.freeze({
-    mode: 'strict',
-    typeSymbol: 'dsh-talk/types#TalkInterruptResult',
-    schema: TALK_INTERRUPT_RESULT_SCHEMA,
-  }),
+  result: strictWire('dsh-talk/types#TalkInterruptResult', TALK_INTERRUPT_RESULT_SCHEMA),
   sourceLocation: SOURCE,
 } as const) satisfies InvocationDescriptor
 
