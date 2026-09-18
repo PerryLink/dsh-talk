@@ -70,6 +70,16 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
   await ctx.plugin(function mountTalkService(ctx: Context): void {
     new TalkService(ctx, config, resolved, 5)
   })
+  // A02: mounting the service crosses an await. If the fiber was disposed while
+  // it resolved, every registration below would throw INACTIVE_EFFECT and leave
+  // a half-mounted plugin behind; bail out instead (a reload runs the whole
+  // path again). Scope-borrow check (card step 6, verified in source): the
+  // service reads the loader's `baseUrl` at CALL time from the child context
+  // `ctx.plugin` created (src/service.ts:450-459) — a plain inherited property,
+  // never an effect — and `applySettings` is only reachable through the service
+  // this same fiber owns, so the borrowed scope cannot dangle after
+  // unload/reload.
+  if (ctx.fiber.uid === null) return
   const service = ctx.get('talk') as TalkService
 
   ctx.effect(() => ctx.tools.register(speakTool(service, resolved.maxSpeakChars)), 'dsh-talk: speak tool')
