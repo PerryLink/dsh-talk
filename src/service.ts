@@ -36,6 +36,9 @@ const PROFILE_PATCH_FILENAME = 'cordis.patch.yml'
 /** Cap on one synthesized utterance kept in memory (base64-unfriendly, so bytes). */
 const MAX_UTTERANCE_COUNT = 64
 
+/** Cap on sessions whose speech-log outcomes are remembered (oldest evicted first). */
+const SPEECH_LOG_OUTCOME_SESSIONS = 32
+
 /** One cached utterance the client fetches through `talk/audio`. */
 interface StoredUtterance {
   /** MIME type of the audio. */
@@ -138,6 +141,13 @@ export class TalkService extends TypertRemoteService {
   private totalCachedBytes = 0
   /** In-flight local syntheses by utterance id (abortable for interruption). */
   private readonly activeSyntheses = new Map<string, AbortController>()
+  /**
+   * Per-session speech-log outcomes, so a host that cannot carry the
+   * `dsh-talk/speech` event is observable instead of silently dropping every
+   * utterance. Bounded: the oldest session is evicted past
+   * {@link SPEECH_LOG_OUTCOME_SESSIONS}.
+   */
+  private readonly speechLogOutcomes = new Map<string, { appended: number; skipped: number }>()
 
   /**
    * @param ctx - context carrying the subprocess service.
@@ -259,11 +269,39 @@ export class TalkService extends TypertRemoteService {
   /** Append one log-only speech event through the adaptive gate; a disposed session must never kill speech. */
   private recordSpeechEvent(session: Session | undefined, event: DshTalkSpeechEvent): void {
     if (session === undefined) return
+    let appended = false
     try {
-      appendSpeechEvent(session, event)
+      appended = appendSpeechEvent(session, event)
     } catch (error) {
       this.ctx.logger.warn(`dsh-talk: failed to log speech event: ${sanitizeText(error instanceof Error ? error.message : String(error))}`)
     }
+    this.recordSpeechLogOutcome(String(session.id), appended)
+  }
+
+  /** Fold one append attempt into the per-session outcome table (never throws). */
+  private recordSpeechLogOutcome(sessionId: string, appended: boolean): void {
+    const current = this.speechLogOutcomes.get(sessionId) ?? { appended: 0, skipped: 0 }
+    if (appended) current.appended += 1
+    else current.skipped += 1
+    this.speechLogOutcomes.delete(sessionId)
+    this.speechLogOutcomes.set(sessionId, current)
+    while (this.speechLogOutcomes.size > SPEECH_LOG_OUTCOME_SESSIONS) {
+      const oldest = this.speechLogOutcomes.keys().next().value as string | undefined
+      if (oldest === undefined) break
+      this.speechLogOutcomes.delete(oldest)
+    }
+  }
+
+  /**
+   * Read one session's speech-log outcome counters (`undefined` when the
+   * session never uttered anything). `skipped` counts the utterances this host
+   * could not record, which is the visible form of the gate's degradation.
+   * @param sessionId - the session to read.
+   * @returns the counters, or undefined when nothing was recorded.
+   */
+  speechLogOutcome(sessionId: string): { appended: number; skipped: number } | undefined {
+    const value = this.speechLogOutcomes.get(sessionId)
+    return value === undefined ? undefined : { ...value }
   }
 
   /** Store one utterance, evicting the oldest entries past the byte/count caps. */

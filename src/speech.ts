@@ -8,14 +8,20 @@
  * themselves stay out of the log and travel only through the `talk/audio`
  * Remote endpoint.
  *
- * The append goes through the adaptive gate in {@link appendSpeechEvent}:
- * - hosts whose known-type set covers the vocabulary append plainly;
- * - hosts with an `ignorable` append option (pre-0.1.2 master builds) append
- *   with the marker, so builds that do not know the type skip it on restore;
- * - envelope-less hosts (0.1.0-rc.6/rc.8, 0.1.1-rc.2, and the 0.1.2-alpha line,
- *   which removed the envelope and fails closed on unknown types at read)
- *   get no append — the `speak` tool results remain the reconstructable
- *   audit trail, and the `talk:speech` projection simply stays empty there. On 0.1.2-alpha.3 the envelope field is retained for stored-log read compatibility only - its Session.append still cannot stamp the marker, so the gate behavior is unchanged.
+ * The append goes through the gate in {@link appendSpeechEvent}:
+ * - hosts whose known-type set covers the vocabulary append plainly and the
+ *   call reports `true`;
+ * - every other host gets no append and the call reports `false` — the `speak`
+ *   tool results remain the reconstructable audit trail, and the `talk:speech`
+ *   projection simply stays empty there.
+ *
+ * HARD RULE (measured on the 0.1.6-alpha.2 line): `Session.append`'s third
+ * parameter carries a `SurfaceIntent`, and only for surface-eligible event
+ * types; it is never an `ignorable` envelope. An out-of-repo non-surface type
+ * therefore cannot be stamped, and an unmarked unknown event makes a later
+ * reader refuse the whole stored log — so the source-text probe that used to
+ * look for an `ignorable` option was removed and must not come back in any
+ * form (least of all as an unconditional append).
  *
  * @module dsh-talk/speech
  */
@@ -34,24 +40,18 @@ declare module '@deepseek-ai/dsh-session' {
   }
 }
 
-/** Loose append shape probed at runtime (envelope-less hosts take no options; pre-0.1.2 master builds took `ignorable`). */
-type AppendProbe = (type: string, data: unknown, options?: { ignorable: true }) => unknown
-
 /**
- * Append one `dsh-talk/speech` event when the host can carry it safely; skip
- * silently otherwise (the `tool/call` + `tool/result` events remain the
- * model-visible log, so nothing model-visible is lost). See the module doc
- * for the three host classes.
+ * Append one `dsh-talk/speech` event when the host's known-type set covers the
+ * vocabulary; skip otherwise and report the degradation to the caller (the
+ * `tool/call` + `tool/result` events remain the model-visible log, so nothing
+ * model-visible is lost).
  * @param session - the calling session.
  * @param data - the speech event payload.
+ * @returns `true` when the event was appended, `false` when this host cannot
+ *   carry it (the caller records the skip so the degradation is observable).
  */
-export function appendSpeechEvent(session: Session, data: DshTalkSpeechEvent): void {
-  if (KNOWN_SESSION_EVENT_TYPES.has(SPEECH_EVENT)) {
-    session.append(SPEECH_EVENT, data)
-    return
-  }
-  const append = session.append as AppendProbe
-  if (Function.prototype.toString.call(append).includes('ignorable')) {
-    append.call(session, SPEECH_EVENT, data, { ignorable: true })
-  }
+export function appendSpeechEvent(session: Session, data: DshTalkSpeechEvent): boolean {
+  if (!KNOWN_SESSION_EVENT_TYPES.has(SPEECH_EVENT)) return false
+  session.append(SPEECH_EVENT, data)
+  return true
 }
