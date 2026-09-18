@@ -68,6 +68,33 @@ describe('fiber disposal', () => {
       await harness.ctx.fiber.dispose()
     }
   })
+
+  // G-9 round trip (headless form of the settings-tab off/on toggle): unmount
+  // and mount the plugin twice over the same context. Every registration must
+  // come back exactly once — no duplicate `speak` row, no leftover service —
+  // and the second mount must not throw, which is what the post-await fiber
+  // guard in `apply` exists to prevent.
+  it('re-mounts twice with exactly one registration per surface and no stale service', async () => {
+    const config = { tts: { engine: 'browser' } }
+    const harness = await mount(config)
+    const plugin = await import('../src/index.ts')
+    const speakRows = (): number => harness.ctx.tools.schemas().filter(entry => entry.name === 'speak').length
+    try {
+      for (const cycle of [1, 2]) {
+        await harness.pluginFiber.dispose()
+        expect(harness.ctx.get('talk'), `cycle ${cycle}: service removed`).toBeUndefined()
+        expect(speakRows(), `cycle ${cycle}: tool removed`).toBe(0)
+
+        const fiber = await harness.ctx.plugin(plugin as unknown as import('@deepseek-ai/cordis').Plugin, config)
+        expect(harness.ctx.get('talk'), `cycle ${cycle}: service re-registered`).toBeDefined()
+        expect(speakRows(), `cycle ${cycle}: exactly one speak row`).toBe(1)
+        await fiber.dispose()
+      }
+      expect(harness.ctx.get('talk')).toBeUndefined()
+    } finally {
+      await harness.ctx.fiber.dispose()
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------
