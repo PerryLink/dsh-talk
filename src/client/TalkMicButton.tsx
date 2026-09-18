@@ -407,16 +407,24 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings, recording])
 
-  // Playback: fresh utterances from the talk:speech projection.
-  const readProjection = useProjection as unknown as (unit: 'talk:speech') => {
-    utteranceId: string
-    engine?: string
-    text?: string
-    voice?: string
-    rate?: number
-    pitch?: number
-  } | null | undefined
-  const speech = readProjection('talk:speech')
+  // Playback: fresh utterances from the talk:speech projection. The seat is
+  // optional on this host line, so the hook is only called when the kit
+  // actually provides it — calling an undefined `useProjection` threw and took
+  // the whole button down; now a missing seat simply means no playback while
+  // the mic itself keeps working. The prop is stable for the component's
+  // lifetime (the slot kit either supplies the seat for the whole mount or
+  // never does), so the conditional call cannot reorder hooks.
+  const readProjection = typeof useProjection === 'function'
+    ? useProjection as unknown as (unit: 'talk:speech') => {
+      utteranceId: string
+      engine?: string
+      text?: string
+      voice?: string
+      rate?: number
+      pitch?: number
+    } | null | undefined
+    : undefined
+  const speech = readProjection === undefined ? undefined : readProjection('talk:speech')
   const playedRef = useRef<string | null>(null)
   useEffect(() => {
     if (speech === null || speech === undefined || speech.utteranceId === playedRef.current) return
