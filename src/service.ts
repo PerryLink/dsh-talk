@@ -28,7 +28,7 @@ import {
 } from './settings-patch.ts'
 import { appendSpeechEvent } from './speech.ts'
 import type { DshTalkSpeechEvent, SpeechReason, SpeechTtsEngine } from './speech.ts'
-import type { TalkAudio, TalkInterruptResult, TalkSettingsInput, TalkSettingsResult, TalkStatus, TalkTranscript } from './wire.ts'
+import type { TalkAudio, TalkInterruptResult, TalkLatest, TalkSettingsInput, TalkSettingsResult, TalkStatus, TalkTranscript } from './wire.ts'
 
 /** Profile patch-layer filename the settings panel appends to. */
 const PROFILE_PATCH_FILENAME = 'cordis.patch.yml'
@@ -55,6 +55,19 @@ interface StoredUtterance {
 type SpeechDelivery =
   | { readonly engine: 'browser'; readonly voice?: string; readonly rate: number; readonly pitch: number }
   | { readonly engine: 'edge-tts' | 'piper' }
+
+/** One session's bounded speech-loop record: counters plus the newest utterance. */
+interface SpeechSessionRecord {
+  /** Utterances appended to this session's log. */
+  appended: number
+  /** Utterances this host could not append for this session. */
+  skipped: number
+  /** Newest utterance of this session; absent before its first utterance. */
+  latest?: StoredLatest
+}
+
+/** The newest utterance of one session, without the session id (added on read). */
+type StoredLatest = Omit<TalkLatest, 'sessionId' | 'appended' | 'skipped'>
 
 /** Result of one speak request (the speak tool's canonical value). */
 export interface SpeakOutcome {
@@ -130,7 +143,8 @@ export function resolveSttEngine(resolved: ResolvedConfig): 'web' | 'funasr' | '
  * Voice-loop host service exported over the `talk` Remote namespace. Speak
  * requests from the tool and the announcement listeners land in {@link speak};
  * the client fetches audio, transcripts speech, interrupts playback, reads
- * the effective settings, and applies panel edits through the Remote methods.
+ * the effective settings, reads one session's newest utterance, and applies
+ * panel edits through the Remote methods.
  */
 export class TalkService extends TypertRemoteService {
   static inject = ['subprocess']
@@ -142,12 +156,13 @@ export class TalkService extends TypertRemoteService {
   /** In-flight local syntheses by utterance id (abortable for interruption). */
   private readonly activeSyntheses = new Map<string, AbortController>()
   /**
-   * Per-session speech-log outcomes, so a host that cannot carry the
+   * Per-session speech-loop records, so a host that cannot carry the
    * `dsh-talk/speech` event is observable instead of silently dropping every
-   * utterance. Bounded: the oldest session is evicted past
-   * {@link SPEECH_LOG_OUTCOME_SESSIONS}.
+   * utterance, and so `talk/latest` can answer for ONE session without reading
+   * whichever session happened to speak last. Bounded: the oldest session is
+   * evicted past {@link SPEECH_LOG_OUTCOME_SESSIONS}.
    */
-  private readonly speechLogOutcomes = new Map<string, { appended: number; skipped: number }>()
+  private readonly speechLogOutcomes = new Map<string, SpeechSessionRecord>()
 
   /**
    * @param ctx - context carrying the subprocess service.
@@ -275,14 +290,24 @@ export class TalkService extends TypertRemoteService {
     } catch (error) {
       this.ctx.logger.warn(`dsh-talk: failed to log speech event: ${sanitizeText(error instanceof Error ? error.message : String(error))}`)
     }
-    this.recordSpeechLogOutcome(String(session.id), appended)
+    this.recordSpeechLogOutcome(String(session.id), appended, event)
   }
 
-  /** Fold one append attempt into the per-session outcome table (never throws). */
-  private recordSpeechLogOutcome(sessionId: string, appended: boolean): void {
+  /** Fold one append attempt into the per-session record table (never throws). */
+  private recordSpeechLogOutcome(sessionId: string, appended: boolean, event: DshTalkSpeechEvent): void {
     const current = this.speechLogOutcomes.get(sessionId) ?? { appended: 0, skipped: 0 }
     if (appended) current.appended += 1
     else current.skipped += 1
+    current.latest = {
+      utteranceId: event.utteranceId,
+      engine: event.engine,
+      text: event.text,
+      audioBytes: event.audioBytes,
+      reason: event.reason,
+      logged: appended,
+      ...(event.error !== undefined ? { error: event.error } : {}),
+      ...(event.interrupted === true ? { interrupted: true as const } : {}),
+    }
     this.speechLogOutcomes.delete(sessionId)
     this.speechLogOutcomes.set(sessionId, current)
     while (this.speechLogOutcomes.size > SPEECH_LOG_OUTCOME_SESSIONS) {
@@ -301,7 +326,31 @@ export class TalkService extends TypertRemoteService {
    */
   speechLogOutcome(sessionId: string): { appended: number; skipped: number } | undefined {
     const value = this.speechLogOutcomes.get(sessionId)
-    return value === undefined ? undefined : { ...value }
+    return value === undefined ? undefined : { appended: value.appended, skipped: value.skipped }
+  }
+
+  /**
+   * Read the newest utterance of ONE session (`talk/latest`). Host-side records
+   * are keyed by session id, so a multi-session client never receives another
+   * session's utterance; the counters ride along as the visible form of the
+   * log gate's degradation.
+   *
+   * @param sessionId - the session to read (required).
+   * @returns the newest utterance plus this session's counters, or null when
+   *   that session never spoke.
+   */
+  latest(sessionId: string): TalkLatest | null {
+    if (typeof sessionId !== 'string' || sessionId === '') {
+      throw new Error('dsh-talk: talk/latest requires a non-empty sessionId')
+    }
+    const record = this.speechLogOutcomes.get(sessionId)
+    if (record?.latest === undefined) return null
+    return {
+      sessionId,
+      ...record.latest,
+      appended: record.appended,
+      skipped: record.skipped,
+    }
   }
 
   /** Store one utterance, evicting the oldest entries past the byte/count caps. */
