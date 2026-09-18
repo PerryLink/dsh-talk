@@ -5,12 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.11] - 2026-09-18
+
+### Added
+
+- `talk/latest(sessionId)`: the newest utterance of ONE session plus that session's appended/skipped counters and whether the utterance reached the session log. The host keys its bounded record table by session id, so a multi-session surface never reads another session's utterance, and an empty id is refused instead of resolving to some other session. The projection shape is unchanged, so the projection state version stays at 1.
 
 ### Changed
 
 - Carry both Typert strict-codec faces on the wire descriptors: the published `schema` field (0.1.5-rc.2 line) and the `create` factory the 0.1.6-alpha.1 checkout materializes lazily on first use. Both typecheck rulers stay green.
 - Implement the new `SubprocessRuntime.terminalEnvironment` member and `SubprocessHandle.control` field in the scripted test provider (0.1.6-alpha.1 extended the subprocess seam).
+- Append the third peer clause `|| >=0.1.6-0 <0.2.0` to the ten `@deepseek-ai/dsh-*` peer ranges (the `schemastery` peer and the seven optional peers are untouched) and declare the same range in `engines.dsh`; `dsh.manifestVersion` is now `1`. These are declarations only, read back rather than enforced by a reader, and no previously supported host line is dropped.
+- Re-anchor the monthly Compat workflow to `0.1.6-alpha.2` (pin, trigger, and `minimumReleaseAge: 0`), so the job installs the line this release is built against instead of the previous one.
+
+### Fixed
+
+- Speech events were never written to the session log, on any host line. The gate looked for an `ignorable` append option by stringifying `Function.prototype.toString` and probing the option name inside the resulting source text; that probe could not match, so every utterance was skipped, the call returned nothing, and no surface could tell "logged" from "dropped". The gate is a plain yes/no append again and the call reports which one happened, while the `speak` tool results remain the reconstructable audit trail on hosts whose vocabulary does not carry the event.
+- `applySettings` validated only the submitted settings, not the row they merge into, so a combination that passes the wire check but cannot load (for example `ttsEngine: piper` without `tts.piper.modelPath`) was appended to `cordis.patch.yml` and broke the next profile load. The merged row is now resolved before the patch layer is touched: a refusal leaves the file byte-identical and creates no backup.
+- The plugin registered its speak tool, projection unit, and announcement listeners after `await ctx.plugin(...)`. Unmounting or reloading while that mount resolved threw `INACTIVE_EFFECT` and left a half-mounted plugin behind; the apply path now stops instead of registering once the fiber is disposed.
+- The browser half called `useProjection` unconditionally. On host lines whose input-zone kit does not supply the seat the call threw during render and took the mic button down with it. A missing seat now means no playback — a behaviour change for those lines — while recording, transcription, and sending keep working.
+- The test harness added `dsh-talk/speech` to the host's known-type set, so two integration specs exercised a branch that can never run in production. The shortcut is gone, the specs pin the degradation and the per-session record instead, and they were reverse-verified against the previous gate (they fail there and pass here).
 
 ## [0.3.10] - 2026-09-12
 
