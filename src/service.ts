@@ -18,6 +18,7 @@ import { TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import type { Session } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-subprocess'
 import type { Config, ResolvedConfig, TtsEngine } from './config.ts'
+import { resolveConfig } from './config.ts'
 import { EngineFailure, synthesize, transcribeFunasr, transcribeWhisper } from './engine.ts'
 import { sanitizeText } from './sanitize.ts'
 import {
@@ -485,6 +486,18 @@ export class TalkService extends TypertRemoteService {
     const file = this.patchFile()
     if (file === null) throw new Error('dsh-talk: cannot locate the profile patch layer (ctx.baseUrl is unset)')
     const rowConfig = mergeTalkRowConfig(this.rawConfig, validated.settings)
+    // A7: validate the MERGED row before touching the patch layer. The wire
+    // validation only checks the submission itself; a combination that is
+    // invalid against the row's raw config (e.g. selecting funasr while no URL
+    // is configured) must fail here — with the patch file byte-identical and no
+    // backup created — instead of being appended and breaking the next load.
+    try {
+      resolveConfig(rowConfig as Config)
+    } catch (error) {
+      throw new Error(
+        `dsh-talk: refusing to write a configuration that cannot load: ${sanitizeText(error instanceof Error ? error.message : String(error))}`,
+      )
+    }
     const fragment = renderSettingsFragment(rowConfig)
     const { backupPath, bytes } = await appendSettingsFragment(file, fragment, this.backupCount)
     return {
