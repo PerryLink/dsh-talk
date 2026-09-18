@@ -25,6 +25,7 @@ import {
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { SPEECH_EVENT } from '../src/speech.ts'
+import type { TalkService } from '../src/service.ts'
 
 /** A subprocess provider whose spawns answer from scripted stdout/exit facts. */
 export class FakeSubprocessRuntime extends SubprocessRuntime {
@@ -115,6 +116,27 @@ export interface Harness {
   readonly session: Session
   readonly agent: Agent
   readonly subprocess: FakeSubprocessRuntime
+  /** The mounted talk service (for assertions about the speech-log outcome table). */
+  readonly service: TalkService
+}
+
+/**
+ * Run `body` with `dsh-talk/speech` deliberately marked as a known host
+ * vocabulary entry, restoring the previous state afterwards. The installed
+ * peers do NOT know out-of-repo event types, so the gate legitimately skips
+ * every speech append by default; only a spec that is explicitly about the
+ * appended payload shape should opt in through this helper.
+ * @param body - the assertions to run with the vocabulary known.
+ */
+export async function withKnownSpeechVocabulary(body: () => Promise<void> | void): Promise<void> {
+  const known = KNOWN_SESSION_EVENT_TYPES as Set<string>
+  const had = known.has(SPEECH_EVENT)
+  known.add(SPEECH_EVENT)
+  try {
+    await body()
+  } finally {
+    if (!had) known.delete(SPEECH_EVENT)
+  }
 }
 
 /**
@@ -127,12 +149,11 @@ export interface Harness {
 export async function mountHarness(config: Record<string, unknown> = {}): Promise<Harness> {
   const ctx = new Context()
   await ctx.plugin(SessionStore)
-  // The pinned 0.1.1-rc.2 session does not know out-of-repo plugin event
-  // types, so the adaptive gate would skip every speech append. Mark the
-  // vocabulary known so the integration specs exercise the real append and
-  // projection pipeline end to end (the gate itself has its own three-host
-  // unit spec in speech.spec.ts).
-  ;(KNOWN_SESSION_EVENT_TYPES as Set<string>).add(SPEECH_EVENT)
+  // The installed peers do not know out-of-repo plugin event types, so the
+  // gate correctly SKIPS every speech append here — the integration specs
+  // assert that degradation and the outcome table that records it. A spec
+  // about the appended payload opts in explicitly through
+  // `withKnownSpeechVocabulary`.
   const session = ctx.sessions.create(SessionId('dsh-talk-harness'))
   session.append('turn/start', { turn: 1 })
   ctx.provide('systemPrompt', { tools: () => () => undefined, section: () => () => undefined } as never)
@@ -150,7 +171,8 @@ export async function mountHarness(config: Record<string, unknown> = {}): Promis
 
   const subprocess = ctx.get('subprocess') as unknown as FakeSubprocessRuntime
   const agent = makeAgent(session)
-  return { ctx, session, agent, subprocess }
+  const service = ctx.get('talk') as unknown as TalkService
+  return { ctx, session, agent, subprocess, service }
 }
 
 /** Re-exported for specs that script subprocess outcomes directly. */

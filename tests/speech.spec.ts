@@ -1,7 +1,9 @@
 /**
- * The adaptive speech gate: plain append on known-type hosts, marked append on
- * `ignorable`-envelope hosts, and a silent skip on envelope-less hosts
- * (0.1.0-rc.6/rc.8, 0.1.1-rc.2, 0.1.2-alpha.1).
+ * The speech gate: a plain append that reports `true` when the host's
+ * vocabulary covers the type, and a skip that reports `false` on every other
+ * host (no supported line stamps an `ignorable` marker on a non-surface type).
+ * The old source-text probe is gone; this spec pins that no marked or
+ * unconditional append can come back.
  * @module dsh-talk/test/speech.spec
  */
 
@@ -19,7 +21,7 @@ const payload: DshTalkSpeechEvent = {
 }
 
 describe('appendSpeechEvent', () => {
-  it('appends plainly when the host knows the vocabulary', () => {
+  it('appends plainly and reports true when the host knows the vocabulary', () => {
     ;(KNOWN_SESSION_EVENT_TYPES as Set<string>).add(SPEECH_EVENT)
     try {
       const calls: unknown[][] = []
@@ -27,31 +29,35 @@ describe('appendSpeechEvent', () => {
         calls.push([type, data])
         return {}
       }
-      appendSpeechEvent({ append } as unknown as Session, payload)
+      const appended = appendSpeechEvent({ append } as unknown as Session, payload)
+      expect(appended).toBe(true)
       expect(calls).toEqual([[SPEECH_EVENT, payload]])
     } finally {
       ;(KNOWN_SESSION_EVENT_TYPES as Set<string>).delete(SPEECH_EVENT)
     }
   })
 
-  it('appends with the marker on envelope hosts', () => {
+  it('reports false and never appends on an unknown-vocabulary host, even with an ignorable-shaped body', () => {
     const calls: unknown[][] = []
     const append = function (type: string, data: unknown, options?: unknown) {
-      // The `ignorable` marker rides the options bag on envelope hosts.
+      const ignorable = (options as { ignorable?: boolean } | undefined)?.ignorable
+      void ignorable
       calls.push(options === undefined ? [type, data] : [type, data, options])
-      return { ignorable: (options as { ignorable?: boolean } | undefined)?.ignorable === true }
+      return { ignorable: ignorable === true }
     }
-    appendSpeechEvent({ append } as unknown as Session, payload)
-    expect(calls).toEqual([[SPEECH_EVENT, payload, { ignorable: true }]])
+    const appended = appendSpeechEvent({ append } as unknown as Session, payload)
+    expect(appended).toBe(false)
+    expect(calls).toHaveLength(0)
   })
 
-  it('skips the append on envelope-less hosts', () => {
+  it('reports false on a surface-intent-shaped host without calling append', () => {
     const calls: unknown[][] = []
     const append = function (type: string, data: unknown, surface?: unknown) {
       calls.push(surface === undefined ? [type, data] : [type, data, surface])
       return { surface }
     }
-    appendSpeechEvent({ append } as unknown as Session, payload)
+    const appended = appendSpeechEvent({ append } as unknown as Session, payload)
+    expect(appended).toBe(false)
     expect(calls).toHaveLength(0)
   })
 })

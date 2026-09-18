@@ -27,7 +27,7 @@
 
 | 方面 | 状态 |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.5-rc.2`（GitHub tag，2026-09-11 核验：完整门禁链 + profile 安装冒烟）。npm 依赖线 `0.1.5-rc.2`，peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0`。 |
+| Harness | DeepSeek Harness `dsh-v0.1.6-alpha.2`（2026-09-18 适配：peer 第三段 + `engines.dsh` + `manifestVersion: 1`，月度 Compat workflow 已锚定该线）；门禁链于 2026-09-18 全绿（双 typecheck 尺子、86 个测试、build、self-contained、artifacts、pack）。npm 开发/测试线 `0.1.5-rc.2`，peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0`。 |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | 浏览器 | Web Speech + MediaRecorder（Chrome/Edge 最佳）；其余场景用宿主侧转写/TTS 引擎 |
 
@@ -131,7 +131,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 - **模型可见 ⟺ 已记录** —— 模型只看到 speak 工具的规范值与渲染文本。`dsh-talk/speech` 事件只在宿主能够承载它时写入（见宿主兼容性）；`tool/call` + `tool/result` 事件始终是可重建的痕迹。
 - **审批播报绝不阻塞** —— `approval/request` 监听器总是调用 `next()`。
 - **输出脱敏** —— 凭据与临时音频路径绝不上日志或展示面。
-- **宿主兼容性** —— `dsh-talk/speech` 事件经自适应门写入：已知词汇表覆盖该事件的宿主直接追加；带 `ignorable` 追加选项的宿主带标记追加；无信封宿主——截至 `0.1.1-rc.2` 的全部已发布线、仅保留信封字段用于存量日志读取兼容、`Session.append` 仍无法盖章的 `0.1.2-alpha` 线，以及 `0.1.2-rc.1` 线——完全不追加，因此语音在这些宿主线上永远不会污染会话日志。此时实时播放历史保持为空，speak 工具结果是可重建的审计痕迹。
+- **宿主兼容性** —— `dsh-talk/speech` 事件经「是/否」门写入：已知词汇表覆盖该事件的宿主直接追加，且调用方可知追加已发生；其余宿主——截至 `0.1.1-rc.2` 的全部已发布线、`0.1.2-alpha` 线、`0.1.2-rc.1`，以及 `0.1.6-alpha.2`（其 `Session.append` 只能盖章 surface intent，无法盖章 `ignorable` 信封，该字段仅保留用于存量日志读取兼容）——完全不追加，因此语音在这些宿主线上永远不会污染会话日志。跳过不再无声：宿主按会话保留「已追加/已跳过」计数，可由 `talk/latest(sessionId)` 读回；客户端会话级播放列表保持为空，speak 工具结果仍是可重建的审计痕迹。
 - **失败响亮** —— 非法引擎、越界数值、缺模型/端点的引擎配置在挂载时即报错。
 
 ## 已知限制
@@ -140,7 +140,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 - **本地引擎需自行安装**：`edge-tts`、`piper`、`whisper.cpp` 可执行文件与模型需单独安装。
 - **录音格式**：浏览器按其原生 MediaRecorder 编解码器录音；whisper.cpp 可能要求 WAV 录音配置或服务端转换。
 - **设置重载生效**：设置页签追加到 profile patch；重载 profile（或重启 Web 应用）后生效。
-- **无信封宿主上实时播放历史为空**：在 `0.1.1-rc.2`、`0.1.2-alpha` 线以及 `0.1.2-rc.1` 上，宿主词汇表不认识 `dsh-talk/speech`，因此门不写入任何内容，客户端的会话级播放列表保持为空。朗读本身、麦克风、设置页签与工具均不受影响。
+- **无该词汇表的宿主上实时播放历史为空**：在 `0.1.1-rc.2`、`0.1.2-alpha` 线、`0.1.2-rc.1` 与 `0.1.6-alpha.2` 上，宿主词汇表不认识 `dsh-talk/speech`，因此门不写入任何内容，客户端的会话级播放列表保持为空；`talk/latest(sessionId)` 仍返回最新一条朗读与「已跳过」计数。朗读本身、麦克风、设置页签与工具均不受影响。
 - **dsh-talk ≤ 0.2.1 写下的存量日志可能需要在冷加载前修复**：版本 0.2.1 及更早会追加未标记的 `dsh-talk/speech` 事件。在 `0.1.0-rc.7` 及更新的宿主上，日志已含这些事件的会话，其下一次冷加载会以 `SessionFormatUnsupportedError` 失败。修复：停止宿主，备份该会话的 `.jsonl` 日志，为每一行 `"type"` 为 `"dsh-talk/speech"` 的 JSON 记录加上顶层成员 `"ignorable":true`（例如在起始的 `{` 之后插入 `"ignorable":true,`），然后重新打开会话。其余内容不变，不会丢失任何数据；本版本的新追加永远不会产生未标记事件。
 
 ## 开发
@@ -149,7 +149,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc：src + tests，对照本地 harness checkout
 pnpm run typecheck:ci  # tsc：对照已发布的 0.1.5-rc.2 类型（无 paths）
-pnpm test           # vitest：77 个测试、13 个套件
+pnpm test           # vitest：86 个测试、15 个套件
 pnpm run build      # tsc 声明 + tsdown bundle（lib/）
 pnpm run verify:self-contained  # 依赖声明全部来自 registry
 pnpm run verify:artifacts       # 构建产物 ESM 面 + client ModuleLoader 握手

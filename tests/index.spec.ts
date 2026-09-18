@@ -54,8 +54,12 @@ describe('apply — assembly', () => {
     expect(outcome).toBe('rejected')
     // The announcement is fire-and-forget speech; give the pipeline a beat.
     await new Promise(resolve => setTimeout(resolve, 50))
+    // This host line cannot carry the out-of-repo speech type, so the gate
+    // skips the append — and the degradation must be observable instead of
+    // silently dropping the utterance.
     const speech = harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech')
-    expect(speech.some(event => (event.data as { reason: string }).reason === 'approval')).toBe(true)
+    expect(speech).toHaveLength(0)
+    expect(harness.service.speechLogOutcome(String(harness.session.id))?.skipped ?? 0).toBeGreaterThan(0)
   })
 
   it('announces turn completion after a running → idle transition', async () => {
@@ -63,8 +67,11 @@ describe('apply — assembly', () => {
     const agent = makeAgent(harness.session)
     harness.ctx.emit('agent/status', { agent, status: 'running' })
     harness.ctx.emit('agent/status', { agent, status: 'idle' })
+    // The announcement ran and the gate's skip was recorded (this host cannot
+    // carry the speech type).
     const speech = harness.session.snapshotEvents().filter(event => event.type === 'dsh-talk/speech')
-    expect(speech.some(event => (event.data as { reason: string }).reason === 'turn-end')).toBe(true)
+    expect(speech).toHaveLength(0)
+    expect(harness.service.speechLogOutcome(String(harness.session.id))?.skipped ?? 0).toBeGreaterThan(0)
   })
 
   it('stays silent for an idle observation without a prior running', async () => {

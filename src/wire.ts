@@ -12,6 +12,7 @@
 
 import { z } from 'zod'
 import type { InvocationDescriptor } from '@deepseek-ai/dsh-typert-protocol'
+import type { SpeechReason, SpeechTtsEngine } from './vocabulary.ts'
 
 /**
  * Strict wire codec carrying BOTH published and checkout faces: the
@@ -232,6 +233,52 @@ export const TALK_INTERRUPT_RESULT_SCHEMA = z.object({
   stopped: z.boolean(),
 })
 
+/**
+ * Result of `talk/latest`: the newest utterance recorded for ONE session, plus
+ * that session's speech-log counters. Keyed by session id on purpose — a
+ * multi-session client asks about the session it is showing instead of reading
+ * whichever session spoke last.
+ */
+export interface TalkLatest {
+  /** The session this record belongs to (echoes the request). */
+  sessionId: string
+  /** Stable utterance id for `talk/audio`. */
+  utteranceId: string
+  /** Engine that produced (or will produce) the audio. */
+  engine: SpeechTtsEngine
+  /** The spoken text, sanitized and capped. */
+  text: string
+  /** Synthesized audio size in bytes; 0 for the browser engine. */
+  audioBytes: number
+  /** What triggered the utterance. */
+  reason: SpeechReason
+  /** Whether this utterance was appended to the session log (false = gate skip). */
+  logged: boolean
+  /** Utterances this session appended to its log so far. */
+  appended: number
+  /** Utterances this host could not append for this session so far. */
+  skipped: number
+  /** Sanitized failure note; absent on success. */
+  error?: string
+  /** True when the utterance was interrupted. */
+  interrupted?: true
+}
+
+/** Strict wire schema for {@link TalkLatest}. */
+export const TALK_LATEST_SCHEMA = z.object({
+  sessionId: z.string(),
+  utteranceId: z.string(),
+  engine: z.union([z.literal('browser'), z.literal('edge-tts'), z.literal('piper')]),
+  text: z.string(),
+  audioBytes: z.number().int(),
+  reason: z.union([z.literal('speak-tool'), z.literal('turn-end'), z.literal('approval'), z.literal('error')]),
+  logged: z.boolean(),
+  appended: z.number().int(),
+  skipped: z.number().int(),
+  error: z.string().optional(),
+  interrupted: z.literal(true).optional(),
+})
+
 /** Frozen source position both faces carry (diagnostics only). */
 const SOURCE = Object.freeze({ file: 'src/wire.ts', line: 1, column: 1 })
 
@@ -311,6 +358,27 @@ export const TALK_INTERRUPT_DESCRIPTOR = Object.freeze({
 } as const) satisfies InvocationDescriptor
 
 /**
+ * The `talk/latest` invocation descriptor. The session id is a REQUIRED
+ * parameter: the host keys its per-session record table by it, so one session
+ * can never read another's utterance.
+ */
+export const TALK_LATEST_DESCRIPTOR = Object.freeze({
+  id: 'dsh-talk#talk/latest',
+  service: 'talk',
+  namespace: 'talk',
+  method: 'latest',
+  invocation: Object.freeze({ kind: 'direct' }),
+  parameters: Object.freeze([Object.freeze({
+    name: 'sessionId',
+    wire: 'sessionId',
+    source: 'json',
+    codec: strictWire('dsh-talk/types#TalkLatestSessionId', z.string()),
+  } satisfies InvocationDescriptor['parameters'][number])]),
+  result: strictWire('dsh-talk/types#TalkLatest', z.union([TALK_LATEST_SCHEMA, z.null()])),
+  sourceLocation: SOURCE,
+} as const) satisfies InvocationDescriptor
+
+/**
  * The canonical invocation list both Typert faces register — the host
  * manifest and the client contribution share these exact descriptor objects.
  */
@@ -320,4 +388,5 @@ export const TALK_INVOCATIONS = Object.freeze([
   TALK_TRANSCRIBE_DESCRIPTOR,
   TALK_APPLY_SETTINGS_DESCRIPTOR,
   TALK_INTERRUPT_DESCRIPTOR,
+  TALK_LATEST_DESCRIPTOR,
 ])
