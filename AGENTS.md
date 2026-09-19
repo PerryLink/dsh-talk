@@ -31,7 +31,7 @@ Standalone DeepSeek Harness plugin repository (`dsh-talk`). Development follows 
 
 ## Checks
 
-`pnpm run typecheck && pnpm run typecheck:ci && pnpm test && pnpm run build && pnpm run verify:self-contained && pnpm run verify:artifacts && pnpm pack`. The plain `typecheck` resolves the local checkout through tsconfig `paths`; `typecheck:ci` resolves the npm-published `0.1.2-rc.1` faces — keep both green.
+`pnpm run typecheck && pnpm run typecheck:ci && pnpm test && pnpm run build && pnpm run verify:self-contained && pnpm run check:lockfile && pnpm run verify:artifacts && pnpm run check:lockfile && pnpm pack`. The plain `typecheck` resolves the local checkout through tsconfig `paths`; `typecheck:ci` resolves the npm-published `0.1.2-rc.1` faces — keep both green.
 
 ## Docs
 
