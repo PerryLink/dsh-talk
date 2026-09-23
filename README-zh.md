@@ -29,7 +29,7 @@
 
 | 方面 | 状态 |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.7-alpha.1`（2026-09-18 适配：peer 第三段 + `engines.dsh` + `manifestVersion: 1`，月度 Compat workflow 已锚定该线）；门禁链于 2026-09-18 全绿（双 typecheck 尺子、86 个测试、build、self-contained、artifacts、pack）。npm 开发/测试线 `0.1.5-rc.2`，peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0`。 |
+| Harness | DeepSeek Harness `dsh-v0.1.7-alpha.2`（2026-09-18 适配：peer 第三段 + `engines.dsh` + `manifestVersion: 1`，月度 Compat workflow 已锚定该线）；门禁链于 2026-09-18 全绿（双 typecheck 尺子、86 个测试、build、self-contained、artifacts、pack）。npm 开发/测试线 `0.1.5-rc.2`，peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0`。 |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | 浏览器 | Web Speech + MediaRecorder（Chrome/Edge 最佳）；其余场景用宿主侧转写/TTS 引擎 |
 

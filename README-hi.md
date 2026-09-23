@@ -29,7 +29,7 @@
 
 | सतह | स्थिति |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.1.7-alpha.1` (2026-09-18 को अनुकूलित: peers का तीसरा खंड + `engines.dsh` + `manifestVersion: 1`, और मासिक Compat workflow उसी लाइन पर एंकर); 2026-09-18 को पूरी gate chain हरी (दो typecheck रूलर, 86 टेस्ट, build, self-contained, artifacts, pack)। npm dev/test लाइन `0.1.5-rc.2`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0`। |
+| Harness | DeepSeek Harness `dsh-v0.1.7-alpha.2` (2026-09-18 को अनुकूलित: peers का तीसरा खंड + `engines.dsh` + `manifestVersion: 1`, और मासिक Compat workflow उसी लाइन पर एंकर); 2026-09-18 को पूरी gate chain हरी (दो typecheck रूलर, 86 टेस्ट, build, self-contained, artifacts, pack)। npm dev/test लाइन `0.1.5-rc.2`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0`। |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 | ब्राउज़र | Web Speech + MediaRecorder (Chrome/Edge में सर्वश्रेष्ठ); बाकी के लिए host के ट्रांसक्रिप्शन/TTS इंजन |
 
