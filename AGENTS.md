@@ -14,7 +14,7 @@ Standalone DeepSeek Harness plugin repository (`dsh-talk`). Development follows 
 - `src/settings-patch.ts` — append-only profile-patch write-back with timestamped backups (settings tab saves).
 - `src/sanitize.ts` — display redaction: sk-* keys, the Authorization bearer header (label preserved), bare Bearer tokens, key=value credentials, JWTs; temp-path and control-character handling. Pattern ORDER is load-bearing: header form before bare form, key-list excludes `authorization`.
 - `src/client/` — browser half: `apply(ctx: Context)` on the plain cordis context (`ClientContext` from the removed `dsh-client-runtime` is gone); the `remote` service type rides the published `@deepseek-ai/dsh-api-remotes/client` merge, and the slot registry is read through a local structural `SlotsFace` (its owning package differs across host lines). `$mount`s the Remote contribution, registers the mic button in `conversation.input.left` (id `talk-mic`) and the settings tab (`settings.plugins.tab`, id `talk`); pure presenter (`present.ts`), inline scoped stylesheet (standalone bundles cannot use the in-repo CSS-module pipeline), en/zh dictionaries.
-- `tests/` — vitest; real `Context` + `Session`/`ToolRuntime`/`SessionProjectionRegistry` from the `0.1.2-rc.1` peers; the subprocess provider is scripted (a subclass of the REAL `SubprocessRuntime`); browser-only surfaces (MediaRecorder/Web Speech) are feature-detected and covered through the pure presenter/state machine.
+- `tests/` — vitest; real `Context` + `Session`/`ToolRuntime`/`SessionProjectionRegistry` from the `0.1.7-alpha.2` peers; the subprocess provider is scripted (a subclass of the REAL `SubprocessRuntime`); browser-only surfaces (MediaRecorder/Web Speech) are feature-detected and covered through the pure presenter/state machine.
 
 ## Hard rules applied here
 
@@ -31,7 +31,7 @@ Standalone DeepSeek Harness plugin repository (`dsh-talk`). Development follows 
 
 ## Checks
 
-`pnpm run typecheck && pnpm run typecheck:ci && pnpm test && pnpm run build && pnpm run verify:self-contained && pnpm run verify:artifacts && pnpm run check:lockfile && pnpm pack`. The plain `typecheck` resolves the local checkout through tsconfig `paths`; `typecheck:ci` resolves the npm-published `0.1.2-rc.1` faces — keep both green.
+`pnpm run typecheck && pnpm run typecheck:ci && pnpm test && pnpm run build && pnpm run verify:self-contained && pnpm run verify:artifacts && pnpm run check:lockfile && pnpm pack`. The plain `typecheck` resolves the local checkout through tsconfig `paths`; `typecheck:ci` resolves the npm-published `0.1.7-alpha.2` faces (the line the dev/test pins carry) — keep both green.
 
 ## Docs
 
