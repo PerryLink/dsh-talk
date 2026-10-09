@@ -34,6 +34,14 @@
 Este plugin forma parte de la [familia de plugins DSH](https://github.com/PerryLink) (más de 40, todos Apache-2.0). Si te resulta útil, **dale una estrella**: no desbloquea nada, pero ayuda a que la siguiente persona lo encuentre antes.
 
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+## What is dsh-talk?
+
+Bucle de sesión con voz primero para DeepSeek Harness: háblale y escucha su respuesta.
+
+Pulsa el micrófono, habla y la respuesta se lee en voz alta — hablar interrumpe.
+
+![Demostración de terminal de dsh-talk: dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.png)
+
 ## Compatibilidad
 
 | Superficie | Estado |
@@ -55,8 +63,12 @@ Este plugin forma parte de la [familia de plugins DSH](https://github.com/PerryL
 ## Inicio rápido
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-talk
+```
+
+```sh
 # 1. instala el bundle en tu perfil
-dsh plugin --profile web add "github:PerryLink/dsh-talk#main"
+dsh plugin --profile web add github:PerryLink/dsh-talk
 
 # o desde npm (versiones publicadas)
 dsh plugin --profile web add dsh-talk
@@ -73,7 +85,7 @@ Luego pulsa el micrófono junto al compositor y habla; o pide al agente que habl
 
 ## Instalación y desinstalación
 
-- **Canal git** (último `main`): `dsh plugin --profile web add "github:PerryLink/dsh-talk#main"` — el script `prepare` compila solo con dependencias de producción.
+- **Canal git** (último `main`): `dsh plugin --profile web add github:PerryLink/dsh-talk` — el script `prepare` compila solo con dependencias de producción.
 - **Canal npm** (versiones publicadas): `dsh plugin --profile web add dsh-talk`.
 - **Canal tarball**: `pnpm pack` en este repositorio y luego `dsh plugin --profile web add ./dsh-talk-<version>.tgz`.
 - **Desinstalar**: `dsh plugin --profile web remove dsh-talk` (o elimina la fila del parche del perfil).

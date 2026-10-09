@@ -34,6 +34,14 @@
 这个插件是 [DSH 插件家族](https://github.com/PerryLink)的一员（40+ 个，全部 Apache-2.0）。如果你在用，**给个 star** —— 它不会解锁任何功能，但会让下一个人在搜索里更容易找到它。
 
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
+## What is dsh-talk?
+
+DeepSeek Harness 的 voice-first 会话闭环：对它说话，听它回答。
+
+按下麦克风说话，回复会被朗读出来——说话即打断。
+
+![dsh-talk 终端演示：dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.png)
+
 ## 兼容性
 
 | 方面 | 状态 |
@@ -64,8 +72,12 @@
 ## 快速开始
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-talk
+```
+
+```sh
 # 1. 把 bundle 装进你的 profile
-dsh plugin --profile web add "github:PerryLink/dsh-talk#main"
+dsh plugin --profile web add github:PerryLink/dsh-talk
 
 # 或从 npm 安装（正式发布版）
 dsh plugin --profile web add dsh-talk
@@ -82,7 +94,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 
 ## 安装与卸载
 
-- **git 通道**（最新 `main`）：`dsh plugin --profile web add "github:PerryLink/dsh-talk#main"` —— `prepare` 脚本仅用生产依赖构建。
+- **git 通道**（最新 `main`）：`dsh plugin --profile web add github:PerryLink/dsh-talk` —— `prepare` 脚本仅用生产依赖构建。
 - **npm 通道**（正式发布版）：`dsh plugin --profile web add dsh-talk`。
 - **tarball 通道**：在本仓库执行 `pnpm pack`，然后 `dsh plugin --profile web add ./dsh-talk-<version>.tgz`。
 - **卸载**：`dsh plugin --profile web remove dsh-talk`（或从 profile patch 中删除该行）。

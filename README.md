@@ -36,6 +36,14 @@
 *English:* part of a 40+ plugin family for DeepSeek Harness. If it is useful, **a star helps the next person find it** — nothing is gated behind it.
 
 
+## What is dsh-talk?
+
+Voice-first session loop for DeepSeek Harness: talk to it, hear it answer.
+
+Press the mic, speak, and the reply is spoken back — with speak-to-interrupt.
+
+![Terminal demo of dsh-talk: dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.png)
+
 ## Compatibility
 
 | Surface | Status |
@@ -66,8 +74,12 @@ browser                                host
 ## Quick start
 
 ```sh
+dsh plugin --profile web add github:PerryLink/dsh-talk
+```
+
+```sh
 # 1. install the bundle into your profile
-dsh plugin --profile web add "github:PerryLink/dsh-talk#main"
+dsh plugin --profile web add github:PerryLink/dsh-talk
 
 # or from npm (published releases)
 dsh plugin --profile web add dsh-talk
@@ -84,7 +96,7 @@ Then press the microphone next to the composer and talk; ask the agent to `speak
 
 ## Install & uninstall
 
-- **git channel** (latest `main`): `dsh plugin --profile web add "github:PerryLink/dsh-talk#main"` — the `prepare` script builds with production dependencies only.
+- **git channel** (latest `main`): `dsh plugin --profile web add github:PerryLink/dsh-talk` — the `prepare` script builds with production dependencies only.
 - **npm channel** (published releases): `dsh plugin --profile web add dsh-talk`.
 - **tarball channel**: `pnpm pack` in this repo, then `dsh plugin --profile web add ./dsh-talk-<version>.tgz`.
 - **uninstall**: `dsh plugin --profile web remove dsh-talk` (or remove the row from the profile patch).
