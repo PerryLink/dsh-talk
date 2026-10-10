@@ -44,6 +44,10 @@ Press the mic, speak, and the reply is spoken back — with speak-to-interrupt.
 
 ![Terminal demo of dsh-talk: dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.png)
 
+![Animated terminal demo of dsh-talk](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.gif)
+
+*The same run, animated.*
+
 ## Compatibility
 
 | Surface | Status |

@@ -43,6 +43,10 @@ DeepSeek Harness 的 voice-first 会话闭环：对它说话，听它回答。
 
 ![dsh-talk 终端演示：dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.png)
 
+![Animated terminal demo of dsh-talk](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.gif)
+
+*同一次运行，动图版。*
+
 ## 兼容性
 
 | 方面 | 状态 |

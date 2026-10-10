@@ -43,6 +43,10 @@ Pulsa el micrófono, habla y la respuesta se lee en voz alta — hablar interrum
 
 ![Demostración de terminal de dsh-talk: dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.png)
 
+![Animated terminal demo of dsh-talk](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.gif)
+
+*La misma ejecución, animada.*
+
 ## Compatibilidad
 
 | Superficie | Estado |

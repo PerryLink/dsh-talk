@@ -43,6 +43,10 @@ DeepSeek Harness के लिए वॉइस-फर्स्ट सत्र �
 
 ![dsh-talk का टर्मिनल डेमो: dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.png)
 
+![Animated terminal demo of dsh-talk](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.gif)
+
+*वही रन, एनिमेटेड।*
+
 ## संगतता
 
 | सतह | स्थिति |
