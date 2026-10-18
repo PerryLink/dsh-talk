@@ -1,6 +1,6 @@
 /**
  * Settings write-back: the settings panel's engine/language changes are
- * rendered as ONE append-only `- set:` operation against the profile's
+ * rendered as ONE append-only row operation against the profile's
  * `cordis.patch.yml` (the same append-with-backup discipline as the loader
  * patch vocabulary). The plugin never rewrites the file: user comments and
  * unrelated rows stay byte-for-byte untouched, a timestamped backup is
@@ -156,17 +156,18 @@ export function settingsPatchComment(now = new Date()): string {
 }
 
 /**
- * Render the merged row config as one append-only `- set:` loader patch
- * fragment. The row is restated in full, so a later panel write supersedes an
- * earlier one exactly like a hand-edited patch line.
+ * Render the merged row config as one append-only loader patch fragment.
+ * The loader requires every non-`insert` operation to name the row `id`; a
+ * bare `- set:` fragment is warned about and skipped (issue #23). The row is
+ * restated in full, so a later panel write supersedes an earlier one.
  *
  * @param rowConfig - the merged row config.
  * @param now - timestamp anchor (tests pass a fixed date).
  * @returns the YAML fragment (no trailing newline; callers append one).
  */
 export function renderSettingsFragment(rowConfig: Record<string, unknown>, now = new Date()): string {
-  const lines = [`# ${settingsPatchComment(now)}`, '- set:', `    id: ${yamlScalar(TALK_ROW_ID)}`, `    name: ${yamlScalar(TALK_PACKAGE_NAME)}`]
-  emitBlock(lines, '    config:', rowConfig, 6)
+  const lines = [`# ${settingsPatchComment(now)}`, `- id: ${yamlScalar(TALK_ROW_ID)}`, `  name: ${yamlScalar(TALK_PACKAGE_NAME)}`]
+  emitBlock(lines, '  config:', rowConfig, 4)
   return lines.join('\n')
 }
 

@@ -57,11 +57,11 @@ describe('applySettings profile-patch write-back', () => {
       // The fragment restates the ROW config (config vocabulary: `tts.engine`),
       // not the panel's flat submission keys, and never rewrites what was there.
       expect(written.startsWith(before)).toBe(true)
-      expect(written).toContain('- set:')
-      expect(written).toContain('    id: talk')
-      expect(written).toContain('    name: dsh-talk')
-      expect(written).toMatch(/^ {6}tts:$/m)
-      expect(written).toMatch(/^ {8}engine: browser$/m)
+      expect(written).toContain('- id: talk')
+      expect(written).toContain('  name: dsh-talk')
+      expect(written).toMatch(/^ {2}config:$/m)
+      expect(written).toMatch(/^ {4}tts:$/m)
+      expect(written).toMatch(/^ {6}engine: browser$/m)
       const backups = backupNames(await readdir(dir))
       expect(backups).toHaveLength(1)
       expect(await readFile(join(dir, backups[0]!), 'utf8')).toBe(before)

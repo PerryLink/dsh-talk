@@ -1,5 +1,14 @@
-{
-  "screenshots": [
-    "docs/assets/dsh-talk-demo.png"
-  ]
-}
+[
+  {
+    "path": "docs/assets/dsh-talk-hero.png",
+    "kind": "hero",
+    "alt": "dsh-talk terminal output",
+    "caption": "Real dsh-talk test run; 108 tests passed."
+  },
+  {
+    "path": "docs/assets/dsh-talk-demo.gif",
+    "kind": "demo",
+    "alt": "Animated dsh-talk terminal session",
+    "caption": "The same run, assembled line by line."
+  }
+]

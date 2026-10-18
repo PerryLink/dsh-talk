@@ -41,7 +41,7 @@ Loop de sessão voice-first para o DeepSeek Harness: fale com ele e ouça a resp
 
 Pressione o microfone, fale e a resposta é lida em voz alta — falar interrompe.
 
-![Demonstração de terminal do dsh-talk: dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.png)
+![Demonstração de terminal do dsh-talk: dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-hero.png)
 
 ![Animated terminal demo of dsh-talk](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.gif)
 
@@ -59,7 +59,7 @@ Pressione o microfone, fale e a resposta é lida em voz alta — falar interromp
 
 O `dsh-talk` fecha o loop de voz nos dois sentidos:
 
-- **Ferramenta `speak`** — o agente lê suas respostas em voz alta. Motores TTS: voz do navegador, `edge-tts` (vozes neurais em rede) ou `piper` (local). O áudio toca no navegador; nos hosts que podem transportá-lo, o registro de sessão guarda a fala saneada (ver Limites de segurança).
+- **Ferramenta `speak`** — o agente lê suas respostas em voz alta. Motores TTS: voz do navegador, `edge-tts` (vozes neurais em rede) ou `piper` (local). O áudio toca no navegador; com um motor local ele também é gravado num arquivo e o resultado da ferramenta carrega o caminho absoluto (`audioPath`) para outras ferramentas consumirem; nos hosts que podem transportá-lo, o registro de sessão guarda a fala saneada (ver Limites de segurança).
 - **Botão de microfone** — pressione, fale e a transcrição cai na caixa de entrada (ou envia direto). Motores STT: Web Speech do navegador (com resultados intermediários), um servidor HTTP FunASR ou `whisper.cpp` local.
 - **Falar interrompe** — começar a falar para a reprodução (canal client→host sobre o namespace `talk`).
 - **Anúncios de eventos** — fim de turno, aprovações pendentes (seguro em cascata: nunca bloqueia o portão) e erros, com interruptor de mudo e frases configuráveis.
@@ -121,6 +121,10 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 | `tts.browser.rate` | `1` | Velocidade do SpeechSynthesis do navegador (0.1..10) |
 | `tts.browser.pitch` | `1` | Tom do SpeechSynthesis do navegador (0..2) |
 | `tts.piper.modelPath` | *(nenhuma)* | Modelo de voz piper; obrigatório com o motor `piper` |
+| `tts.export.enabled` | `true` | Gravar o áudio sintetizado localmente num arquivo e devolver seu caminho como `audioPath` |
+| `tts.export.dir` | `<home>/.dsh-talk/audio` | Diretório de exportação; `~` = home, um caminho relativo resolve sob o home (nunca o workspace) |
+| `tts.export.maxFiles` | `20` | Arquivos mantidos no diretório, contando o recém-gravado (1..1000) |
+| `tts.export.maxAgeMinutes` | `1440` | Arquivos exportados mais antigos que estes minutos são removidos na próxima gravação (1..10080) |
 | `announce.enabled` | `true` | Interruptor mestre de anúncios |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | Quais eventos são falados |
 | `announce.messages.*` | *"Turn complete." etc.* | Frases faladas |
@@ -129,6 +133,17 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 | `maxAudioCacheBytes` | `8388608` | Limite da cache de áudio em memória (1 MiB..64 MiB) |
 
 `stt.silenceFinaliseMs` e `record.vad.silenceMs` são mecanismos distintos: o primeiro finaliza a transcrição do Web Speech quando o reconhecimento contínuo deixa de ouvir fala; o segundo é o detetor por energia do MediaRecorder que encerra a gravação (e a envia quando `record.autoSubmit` está ativo). Correm em pipelines diferentes e não partilham estado.
+
+### Exportação para arquivo de áudio
+
+Cada fala sintetizada por um motor local (`edge-tts`, `piper`) é gravada num arquivo **além de** entrar na cache em memória de onde o navegador reproduz. O motor do navegador sintetiza no cliente e por isso não exporta nada — esse estado é **relatado explicitamente**, nunca em silêncio.
+
+- **Onde**: `tts.export.dir`, por padrão `<home>/.dsh-talk/audio` — o diretório do próprio plugin. Deliberadamente nunca é o diretório de trabalho do host, então jamais polui um repositório; um `tts.export.dir` relativo resolve sob o diretório home pelo mesmo motivo.
+- **Nomes**: `speech-<YYYYMMDD>T<HHMMSS>Z-<8 hex>.mp3` (edge-tts) ou `.wav` (piper). A marca é UTC, então os nomes ordenam cronologicamente, e o token vem do id da fala, de modo que um arquivo remonta à sua entrada `dsh-talk/speech`. O texto falado nunca faz parte do nome.
+- **Limpeza**: limitada a cada gravação, primeiro por idade e depois por quantidade. Arquivos mais antigos que `tts.export.maxAgeMinutes` (padrão 1440 = 24 h) são removidos, e depois os mais antigos até o diretório não passar de `tts.export.maxFiles` (padrão 20, contando o recém-gravado). A limpeza só remove nomes que casam com o padrão `speech-…` deste plugin, então nunca toca outros arquivos num diretório partilhado. Com os padrões o diretório guarda no máximo 20 arquivos (alguns MB) e nada com mais de um dia.
+- **Falha**: exportar é um acréscimo à fala, nunca uma precondição. Se o diretório não puder ser criado ou gravado, a fala toca igual e o resultado relata `audioExport: "failed"` com o motivo; falhas de limpeza são ignoradas e retentadas na próxima gravação.
+- **Caminho visível ao modelo**: o valor canônico da ferramenta `speak` carrega `audioPath` (mais `audioExport` e, quando não há arquivo, `exportNote`), e o mesmo caminho está no texto renderizado — assim o agente pode passá-lo direto a outra ferramenta que aceite um arquivo, por exemplo o argumento de arquivo de um plugin de mensagens. Os anúncios de eventos (fim de turno, aprovação, erro) são sintetizados pelo mesmo pipeline e exportados do mesmo modo, com os mesmos limites.
+- **Entregar o arquivo a outro plugin**: um consumidor que só aceita arquivos dentro do próprio workspace — o `send_wechat` do `dsh-wechat` recusa um `file_path` fora do workspace da sessão chamadora, a menos que o ajuste `allowAnyFilePath` dele esteja ligado — vai recusar um caminho sob o seu diretório home. Para esse fluxo, aponte `tts.export.dir` para um diretório dentro desse workspace (por exemplo `<workspace>/.dsh-talk-audio`); o padrão fica fora de qualquer repositório de propósito.
 
 ## Ferramentas e superfícies
 
@@ -141,15 +156,15 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 
 ## Permissões e dados
 
-- **Permissões**: o plugin guarda apenas uma cache de áudio em memória com limite de bytes; a permissão do microfone é mediada pelo navegador. A aba de configurações apenas anexa fragmentos ao patch do perfil com backup — nunca reescreve o arquivo.
-- **Dados**: o áudio nunca entra no contexto do modelo nem no registro de sessão. Onde o vocabulário de sessão do host o aceita, o evento `dsh-talk/speech` carrega o id da fala, motor, razão, tamanho, texto saneado e, quando aplicável, voz, velocidade e tom do navegador; em hosts sem envelope o evento não é escrito. Toda superfície de exibição/registro redige credenciais, JWT, cabeçalhos bearer e caminhos temporários.
+- **Permissões**: o plugin mantém uma cache de áudio em memória com limite de bytes para reprodução e, com motores locais, grava o áudio sintetizado no próprio diretório limitado (`tts.export.*`, padrão `<home>/.dsh-talk/audio`, no máximo 20 arquivos e 24 h por padrão); a permissão do microfone é mediada pelo navegador. A aba de configurações apenas anexa fragmentos ao patch do perfil com backup — nunca reescreve o arquivo.
+- **Dados**: os bytes de áudio nunca entram no contexto do modelo nem no registro de sessão. Onde o vocabulário de sessão do host o aceita, o evento `dsh-talk/speech` carrega o id da fala, motor, razão, tamanho, texto saneado e, quando aplicável, voz, velocidade e tom do navegador; em hosts sem envelope o evento não é escrito. O resultado da ferramenta `speak` carrega o caminho do arquivo exportado (um artefato persistente no diretório do próprio plugin), e tudo o mais numa superfície de exibição/registro passa pelos ajudantes de redação, então credenciais, JWT, cabeçalhos bearer e caminhos temporários ficam de fora.
 - **Rede**: apenas os motores que você configurar são contatados. `edge-tts` faz síntese pela rede, o FunASR usa seu endpoint configurado e o `webkitSpeechRecognition` do Chrome envia o áudio do microfone aos servidores do Google para transcrição; a reprodução de `speechSynthesis` do navegador permanece local.
 
 ## Limites de segurança
 
 - **Visível para o modelo ⟺ registrado** — o modelo vê apenas o valor canônico e o texto renderizado da ferramenta speak. O evento `dsh-talk/speech` é anexado apenas quando o host pode transportá-lo (ver Compatibilidade do host); os eventos `tool/call` + `tool/result` continuam sendo sempre o rastro reconstruível.
 - **Anúncios de aprovação nunca bloqueiam** — o listener de `approval/request` sempre chama `next()`.
-- **Saída saneada** — credenciais e caminhos temporários de áudio nunca chegam a registros ou telas.
+- **Saída saneada** — credenciais e caminhos temporários de áudio nunca chegam a registros ou telas. A única exceção deliberada é o caminho do áudio exportado no resultado do speak: é um arquivo persistente no diretório do próprio plugin (mesmo assim passa pelo redator de segredos) e existe justamente para ser entregue a outra ferramenta.
 - **Compatibilidade do host** — o evento `dsh-talk/speech` é anexado por uma comporta de sim/não. Hosts cujo vocabulário de tipos conhecidos cobre o evento o anexam e a chamada relata isso; qualquer outro host — toda linha publicada até `0.1.1-rc.2`, a linha `0.1.2-alpha`, `0.1.2-rc.1`, e também `0.1.6-alpha.2`, cujo `Session.append` só consegue estampar o surface intent e não o envelope `ignorable` (esse campo é mantido apenas para compatibilidade de leitura) — não recebe nenhum append, então a fala nunca polui o registro de sessão ali. O salto não é mais silencioso: o host mantém contadores de anexados/omitidos por sessão e `talk/latest(sessionId)` os devolve; a lista de reprodução da sessão no cliente fica vazia e os resultados da ferramenta speak continuam sendo o rastro reconstruível.
 - **Falha ruidosa** — motores inválidos, valores fora de faixa e motores sem seu modelo/endpoint obrigatório falham ao montar.
 
@@ -157,6 +172,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 
 - **Suporte de navegador**: Web Speech e MediaRecorder são detectados por capacidade; sem eles o botão desativa e os motores do host (FunASR/whisper.cpp) podem transcrever quando configurados.
 - **Motores locais são instalação sua**: os executáveis e modelos de `edge-tts`, `piper` e `whisper.cpp` devem ser instalados à parte.
+- **Arquivos de áudio exigem um motor local**: a voz do navegador sintetiza no cliente, então ali `speak` não devolve `audioPath` (o resultado diz isso explicitamente), e um motor local que falha e cai para o navegador também não deixa arquivo. Os arquivos exportados ficam no diretório limitado do próprio plugin — ver Exportação para arquivo de áudio para local, nomes e limpeza.
 - **Formato de gravação**: o navegador grava com seu codec nativo do MediaRecorder; o whisper.cpp pode exigir um gravador WAV ou conversão no servidor.
 - **Configurações aplicam ao recarregar**: a aba anexa ao patch do perfil; um reload do perfil (ou reinício da web) ativa as mudanças.
 - **O histórico de reprodução ao vivo fica vazio em hosts sem esse vocabulário**: em `0.1.1-rc.2`, na linha `0.1.2-alpha`, em `0.1.2-rc.1` e em `0.1.6-alpha.2` o vocabulário do host não conhece `dsh-talk/speech`, então a comporta não escreve nada e a lista de reprodução da sessão no cliente fica vazia; `talk/latest(sessionId)` continua respondendo com a última fala e o contador de omitidos. A fala em si, o microfone, a aba de configurações e a ferramenta não são afetados.
@@ -168,7 +184,7 @@ Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.ym
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc: src + tests contra o checkout local do harness
 pnpm run typecheck:ci  # tsc contra os tipos publicados 0.1.7-alpha.2 (sem paths)
-pnpm test           # vitest: 86 testes, 15 suítes
+pnpm test           # vitest: 108 testes, 16 suítes
 pnpm run build      # declarações tsc + bundles tsdown (lib/)
 pnpm run verify:self-contained  # as specs de dependências resolvem pelo registry
 pnpm run verify:artifacts       # faces ESM construídas + handshake ModuleLoader do cliente

@@ -240,7 +240,11 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
     if (snapshot === undefined || snapshot.record.enabled !== true) return
     // Speak-to-interrupt: starting to talk stops host playback.
     if (snapshot.interrupt) void interrupt()
-    const recognition = webRecognition()
+    // The host resolves `auto` to the configured engine. Only the `web`
+    // resolution may use Web Speech; funasr/whisper must go through
+    // MediaRecorder -> talk/transcribe, otherwise the local-engine promise is
+    // unreachable (issue #25).
+    const recognition = snapshot.stt.resolved === 'web' ? webRecognition() : undefined
     if (recognition !== undefined) {
       // An 'auto' language must not assign the empty string: Chrome handles
       // '' badly on some setups (observed as a silent immediate no-speech).
@@ -316,6 +320,10 @@ export function TalkMicButton(props: TalkMicProps): ReactNode {
       }
       setMic(foldMic(micRef.current, { kind: 'press', maxSeconds: snapshot.record.maxSeconds }))
       setRecording(true)
+      return
+    }
+    if (typeof window !== 'undefined' && window.isSecureContext === false) {
+      setMic(foldMic(micRef.current, { kind: 'failed', message: 'microphone requires a secure origin (https or localhost)' }))
       return
     }
     const mime = supportedMime()

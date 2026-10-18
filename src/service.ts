@@ -2,7 +2,9 @@
  * The talk host service: the `talk` Typert Remote namespace plus the speak
  * pipeline the tool and the announcement listeners share. It resolves the
  * effective engine, synthesizes local audio through `ctx.subprocess` (or
- * delegates to the browser voice), appends every utterance through the
+ * delegates to the browser voice), writes every local synthesis to the bounded
+ * plugin-owned export directory (`audio-export.ts`) so its absolute path can
+ * ride the speak tool's canonical value, appends every utterance through the
  * adaptive `dsh-talk/speech` log gate (see `speech.ts`), keeps an in-memory
  * audio cache for the client's `talk/audio` fetches, and applies the settings
  * panel's engine/language edits as append-only profile-patch operations.
@@ -19,6 +21,8 @@ import type { Session } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-subprocess'
 import type { Config, ResolvedConfig, TtsEngine } from './config.ts'
 import { resolveConfig } from './config.ts'
+import type { AudioExportState, ExportOutcome, LocalTtsEngine } from './audio-export.ts'
+import { BROWSER_EXPORT_NOTE, exportSynthesizedAudio } from './audio-export.ts'
 import { EngineFailure, synthesize, transcribeFunasr, transcribeWhisper } from './engine.ts'
 import { sanitizeText } from './sanitize.ts'
 import {
@@ -84,6 +88,21 @@ export interface SpeakOutcome {
   error?: string
   /** The utterance id the client plays; absent when nothing was produced. */
   utteranceId?: string
+  /**
+   * Absolute path of the exported audio file, usable as another tool's file
+   * argument (for example a messenger plugin's `file_path`). Present only when
+   * `audioExport` is `file`.
+   */
+  audioPath?: string
+  /**
+   * What happened to the audio file: `file` (written), `unsupported` (the
+   * browser engine synthesizes in the browser and yields no host bytes),
+   * `disabled` (`tts.export.enabled` is false), `failed` (the write failed and
+   * speech still played). Absent when no audio was produced at all.
+   */
+  audioExport?: AudioExportState
+  /** Sanitized explanation for every `audioExport` state except `file`. */
+  exportNote?: string
 }
 
 /** Options for one speak request. */
@@ -182,7 +201,8 @@ export class TalkService extends TypertRemoteService {
 
   /**
    * Speak one utterance: resolve the engine, synthesize locally or delegate
-   * to the browser voice, cache the audio, and append the `dsh-talk/speech`
+   * to the browser voice, cache the audio, export local synthesis to a file
+   * (whose absolute path rides the outcome), and append the `dsh-talk/speech`
    * session event through the adaptive gate in `speech.ts` (log-only; skipped
    * silently on hosts that cannot carry it).
    *
@@ -202,7 +222,16 @@ export class TalkService extends TypertRemoteService {
     if (engine === 'browser') {
       const event = this.speechEvent(utteranceId, this.browserDelivery(options.voice), spoken, 0, options.reason)
       this.recordSpeechEvent(options.session, event)
-      return { spoken: true, engine: 'browser', audioBytes: 0, utteranceId }
+      // Explicit degradation: the browser voice synthesizes on the client, so
+      // there are no host bytes to export — never a silent no-file.
+      return {
+        spoken: true,
+        engine: 'browser',
+        audioBytes: 0,
+        utteranceId,
+        audioExport: 'unsupported',
+        exportNote: BROWSER_EXPORT_NOTE,
+      }
     }
 
     const localEngine = engine // edge-tts | piper
@@ -214,8 +243,9 @@ export class TalkService extends TypertRemoteService {
       const result = await synthesize(this.ctx.subprocess, this.resolved, localEngine, spoken, signal)
       const durationSec = Math.max(0, (Date.now() - startedAt) / 1000)
       this.cacheUtterance(utteranceId, result.mime, result.data, spoken, localEngine)
+      const exported = await this.exportAudio(utteranceId, localEngine, result.data)
       this.recordSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, result.data.byteLength, options.reason))
-      return { spoken: true, engine: localEngine, audioBytes: result.data.byteLength, durationSec, utteranceId }
+      return { spoken: true, engine: localEngine, audioBytes: result.data.byteLength, durationSec, utteranceId, ...exported }
     } catch (error) {
       const failure = error instanceof EngineFailure ? error : new EngineFailure(sanitizeText(error instanceof Error ? error.message : String(error)), false)
       if (failure.aborted) {
@@ -230,6 +260,8 @@ export class TalkService extends TypertRemoteService {
           audioBytes: 0,
           error: `${localEngine} failed: ${failure.message}; fell back to the browser voice`,
           utteranceId,
+          audioExport: 'unsupported',
+          exportNote: BROWSER_EXPORT_NOTE,
         }
       }
       this.recordSpeechEvent(options.session, this.speechEvent(utteranceId, { engine: localEngine }, spoken, 0, options.reason, failure.message))
@@ -280,6 +312,30 @@ export class TalkService extends TypertRemoteService {
       rate: this.resolved.browserRate,
       pitch: this.resolved.browserPitch,
     }
+  }
+
+  /**
+   * Write one synthesized utterance to the bounded export directory and report
+   * what happened. Exporting is an addition to speech: a failed write is
+   * described in the outcome (and logged) instead of failing the utterance, so
+   * playback can never be broken by a full disk or a read-only directory.
+   */
+  private async exportAudio(utteranceId: string, engine: LocalTtsEngine, data: Uint8Array): Promise<ExportOutcome> {
+    const outcome = await exportSynthesizedAudio(
+      {
+        enabled: this.resolved.ttsExportEnabled,
+        dir: this.resolved.ttsExportDir,
+        maxFiles: this.resolved.ttsExportMaxFiles,
+        maxAgeMinutes: this.resolved.ttsExportMaxAgeMinutes,
+      },
+      engine,
+      utteranceId,
+      data,
+    )
+    if (outcome.audioExport === 'failed') {
+      this.ctx.logger.warn(`dsh-talk: ${outcome.exportNote ?? 'audio export failed'}`)
+    }
+    return outcome
   }
 
   /** Append one log-only speech event through the adaptive gate; a disposed session must never kill speech. */
@@ -472,7 +528,7 @@ export class TalkService extends TypertRemoteService {
 
   /**
    * Apply the settings panel's engine/language edits: validate, merge over
-   * the row's raw config, and append one `- set:` operation to the profile
+   * the row's raw config, and append one row operation to the profile
    * patch layer (backup first). The change takes effect on the next reload.
    *
    * @param settings - the validated-at-the-wire panel submission.

@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.23] - 2026-10-18
+
+### Changed
+
+- Add a 1280×720 hero and a 960×540, 4-second terminal GIF rendered from the test run; `screenshots.json` is an object array and `capture.json` records the command.
+
+## [0.3.22] - 2026-10-18
+
+### Fixed
+
+- **Local STT engines now use `talk/transcribe`, not Web Speech (issue #25).** `start()` used `webkitSpeechRecognition` whenever the browser exposed it, regardless of `stt.resolved`; with `funasr`/`whisper` configured the local engine was never called. The browser path is now taken only when `resolved === "web"`; otherwise MediaRecorder → `talk/transcribe` is used. A non-secure origin reports a readable failure instead of a silent no-op.
+
+## [0.3.21] - 2026-10-17
+
+### Fixed
+
+- **Settings write-back now emits a row the loader accepts (issue #23).** The panel appended `- set:` with no `id`; the loader warns and skips non-`insert` operations without an id, so "save" looked successful but changed nothing. The fragment is now `- id: talk` + `name` + `config:`, parsed by a test.
+- Compatibility: `engines.dsh` -> `>=0.2.1-0 <0.3.0`; devDependencies to `0.2.1-rc.2`; add `@deepseek-ai/dsh-working-directory`.
+
 All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -25,6 +44,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+### Added
+
+- **Audio file export.** Every utterance synthesized by a local engine (`edge-tts`,
+  `piper`) is now written to a file as well as to the in-memory playback cache, and
+  the absolute path is returned by the `speak` tool as `audioPath` (also appended to
+  the model-facing render text), so another tool can consume it — for example a
+  messenger plugin's file-attachment argument.
+
+  - Directory: `tts.export.dir`, default `<home>/.dsh-talk/audio` — the plugin's own
+    directory. It is never the host's working directory, and a relative value resolves
+    under the home directory, so a repository cannot be polluted.
+  - Names: `speech-<YYYYMMDD>T<HHMMSS>Z-<8 hex>.mp3`/`.wav`; UTC stamp plus the
+    utterance id. The spoken text never appears in a file name.
+  - Cleanup is enforced on every write, age first and count second: files older than
+    `tts.export.maxAgeMinutes` (default 1440) go, then the oldest until at most
+    `tts.export.maxFiles` remain (default 20). Only names this plugin generated are
+    ever unlinked.
+  - Degradation is explicit, never silent: the browser engine (which synthesizes on
+    the client and yields no host bytes) reports `audioExport: "unsupported"`, a
+    disabled export reports `"disabled"`, and a failed write reports `"failed"` with
+    the reason while the utterance still plays. Nothing about the existing in-browser
+    playback path changed.
+
+### Fixed
+
+- Published the export naming/directory/prune policy as pure functions with unit
+  tests, and pointed the test harness's export directory at a per-mount temp
+  directory so a test run never writes into a developer's home directory.
 
 ## [0.3.18] - 2026-10-05
 

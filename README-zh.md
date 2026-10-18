@@ -41,7 +41,7 @@ DeepSeek Harness 的 voice-first 会话闭环：对它说话，听它回答。
 
 按下麦克风说话，回复会被朗读出来——说话即打断。
 
-![dsh-talk 终端演示：dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.png)
+![dsh-talk 终端演示：dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-hero.png)
 
 ![Animated terminal demo of dsh-talk](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.gif)
 
@@ -59,7 +59,7 @@ DeepSeek Harness 的 voice-first 会话闭环：对它说话，听它回答。
 
 `dsh-talk` 双向闭合语音环路：
 
-- **`speak` 工具** —— agent 朗读自己的回复。TTS 引擎：浏览器语音、`edge-tts`（网络神经语音）或 `piper`（本地）。音频在浏览器播放；在能够承载该事件的宿主上，会话日志记录脱敏后的朗读内容（见安全边界）。
+- **`speak` 工具** —— agent 朗读自己的回复。TTS 引擎：浏览器语音、`edge-tts`（网络神经语音）或 `piper`（本地）。音频在浏览器播放；使用本地引擎时还会落盘为文件，工具结果携带其绝对路径（`audioPath`）供其它工具使用；在能够承载该事件的宿主上，会话日志记录脱敏后的朗读内容（见安全边界）。
 - **输入框麦克风按钮** —— 按下说话，转写文本自动回填输入框（或直接提交）。STT 引擎：浏览器 Web Speech（含中间结果）、FunASR HTTP 服务或本地 `whisper.cpp`。
 - **说话即打断** —— 开始说话即停止当前播报（经 client→host 的 `talk` Remote 通道）。
 - **事件播报** —— 回合完成、待审批（waterfall 安全：绝不阻塞门禁）与出错，带静音开关与可配话术。
@@ -130,6 +130,10 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 | `tts.browser.rate` | `1` | 浏览器 SpeechSynthesis 语速（0.1..10） |
 | `tts.browser.pitch` | `1` | 浏览器 SpeechSynthesis 音高（0..2） |
 | `tts.piper.modelPath` | *(无)* | piper 语音模型；引擎为 `piper` 时必填 |
+| `tts.export.enabled` | `true` | 把本地合成的音频写入文件，并以 `audioPath` 返回路径 |
+| `tts.export.dir` | `<home>/.dsh-talk/audio` | 导出目录；`~` = 家目录，相对路径按家目录解析（绝不落在工作区） |
+| `tts.export.maxFiles` | `20` | 导出目录保留的文件数，含刚写入的那个（1..1000） |
+| `tts.export.maxAgeMinutes` | `1440` | 超过此分钟数的导出文件会在下次写入时清理（1..10080） |
 | `announce.enabled` | `true` | 事件播报总开关 |
 | `announce.onTurnEnd` / `onApproval` / `onError` | `true` | 播报哪些事件 |
 | `announce.messages.*` | *"Turn complete." 等* | 播报话术 |
@@ -138,6 +142,17 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 | `maxAudioCacheBytes` | `8388608` | 内存合成音频缓存上限（1 MiB..64 MiB） |
 
 `stt.silenceFinaliseMs` 与 `record.vad.silenceMs` 是两套独立机制：前者在连续 Web Speech 识别听不到语音时定稿转写文本；后者是 MediaRecorder 的能量检测器，用于结束录音（`record.autoSubmit` 开启时随即提交）。两者处于不同流水线，不共享任何状态。
+
+### 音频文件导出
+
+由本地引擎（`edge-tts`、`piper`）合成的每次朗读，除了进入浏览器播放用的内存缓存，还会**额外**写入一个文件。浏览器引擎在客户端合成，因此不导出任何文件 —— 这一状态会**明确报告**，绝不静默。
+
+- **位置**：`tts.export.dir`，默认 `<home>/.dsh-talk/audio`（本插件自己的目录）。它刻意不用宿主的工作目录，因此绝不会污染代码仓；相对路径同样按家目录解析。
+- **命名**：`speech-<YYYYMMDD>T<HHMMSS>Z-<8 位十六进制>.mp3`（edge-tts）或 `.wav`（piper）。时间戳为 UTC，故按名排序即按时间排序；后缀取自 utterance id，可回溯到对应的 `dsh-talk/speech` 日志条目。朗读文本绝不进入文件名。
+- **清理**：每次写入都重新收敛，先按时间、再按数量。早于 `tts.export.maxAgeMinutes`（默认 1440 = 24 小时）的文件被删除，随后从最旧的开始删除，直到目录内不超过 `tts.export.maxFiles` 个（默认 20，含刚写入的那个）。清理只删除匹配本插件 `speech-…` 命名的文件，共享目录中的其它文件绝不触碰。按默认值，目录最多 20 个文件（数 MB），且不会有超过一天的旧文件。
+- **失败**：导出是朗读的附加动作，绝不是前提。目录无法创建或写入时，朗读照常播放，结果里报告 `audioExport: "failed"` 及原因；清理失败被忽略，下次写入时重试。
+- **模型可见的路径**：`speak` 工具的规范值携带 `audioPath`（以及 `audioExport`，无文件时还有 `exportNote`），渲染给模型的结果文本里也有同一路径 —— 因此 agent 可以直接把它交给需要文件路径的其它工具，例如某个消息插件的文件参数。事件播报（回合完成、审批、出错）走同一条流水线，也同样导出，并受同样的上限约束。
+- **把文件交给其它插件**：只接受「自己工作区内文件」的消费方 —— 例如 `dsh-wechat` 的 `send_wechat`，除非它自己的 `allowAnyFilePath` 打开，否则会拒绝调用会话工作区之外的 `file_path` —— 会拒绝你主目录下的路径。要让这条链路成立，请把 `tts.export.dir` 指到该工作区内的目录（例如 `<workspace>/.dsh-talk-audio`）；默认值刻意留在所有代码仓之外。
 
 ## 工具与界面
 
@@ -150,15 +165,15 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 
 ## 权限与数据
 
-- **权限**：插件只保存内存中、字节受限的音频缓存；麦克风权限由浏览器管理。设置页签只向 profile 追加 patch 片段（带时间戳备份）——绝不重写文件。
-- **数据**：音频绝不进入模型上下文或会话日志。在宿主的会话词汇表接受该事件的宿主上，`dsh-talk/speech` 事件携带朗读 id、引擎、原因、大小、脱敏文本，并在适用时携带浏览器语音、语速和音高；在无信封宿主上该事件完全不写入。所有展示/日志面都会脱敏凭据、JWT、bearer 头与临时路径。
+- **权限**：插件保留一份内存中、字节受限的音频缓存用于播放，并在使用本地引擎时把合成音频写入自己的受限目录（`tts.export.*`，默认 `<home>/.dsh-talk/audio`，默认最多 20 个文件、保留 24 小时）；麦克风权限由浏览器管理。设置页签只向 profile 追加 patch 片段（带时间戳备份）——绝不重写文件。
+- **数据**：音频字节绝不进入模型上下文或会话日志。在宿主会话词表接受的宿主上，`dsh-talk/speech` 事件携带 utterance id、引擎、原因、大小、脱敏文本，以及适用时的浏览器音色/语速/音高；在无 envelope 的宿主上该事件完全不写。`speak` 工具结果携带导出文件的路径（插件自有目录中的持久产物），其余所有展示/日志面都经过脱敏，凭证、JWT、bearer 头与临时路径都不会出现。
 - **网络**：只联系你配置的引擎。`edge-tts` 执行网络合成，FunASR 使用其配置的端点，而 Chrome 的 `webkitSpeechRecognition` 会将麦克风音频发送到 Google 服务器进行转写；浏览器的 `speechSynthesis` 播放仍在本机完成。
 
 ## 安全边界
 
 - **模型可见 ⟺ 已记录** —— 模型只看到 speak 工具的规范值与渲染文本。`dsh-talk/speech` 事件只在宿主能够承载它时写入（见宿主兼容性）；`tool/call` + `tool/result` 事件始终是可重建的痕迹。
 - **审批播报绝不阻塞** —— `approval/request` 监听器总是调用 `next()`。
-- **输出脱敏** —— 凭据与临时音频路径绝不上日志或展示面。
+- **输出脱敏** —— 凭据与临时音频路径绝不上日志或展示面。唯一的刻意例外是 speak 结果里的导出音频路径：它是插件自有目录中的持久文件（仍经密钥脱敏），用途正是交给其它工具。
 - **宿主兼容性** —— `dsh-talk/speech` 事件经「是/否」门写入：已知词汇表覆盖该事件的宿主直接追加，且调用方可知追加已发生；其余宿主——截至 `0.1.1-rc.2` 的全部已发布线、`0.1.2-alpha` 线、`0.1.2-rc.1`，以及 `0.1.6-alpha.2`（其 `Session.append` 只能盖章 surface intent，无法盖章 `ignorable` 信封，该字段仅保留用于存量日志读取兼容）——完全不追加，因此语音在这些宿主线上永远不会污染会话日志。跳过不再无声：宿主按会话保留「已追加/已跳过」计数，可由 `talk/latest(sessionId)` 读回；客户端会话级播放列表保持为空，speak 工具结果仍是可重建的审计痕迹。
 - **失败响亮** —— 非法引擎、越界数值、缺模型/端点的引擎配置在挂载时即报错。
 
@@ -166,6 +181,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 
 - **浏览器支持**：Web Speech 与 MediaRecorder 均特性检测；不可用时麦克风按钮自动禁用，配置了宿主引擎（FunASR/whisper.cpp）仍可转写。
 - **本地引擎需自行安装**：`edge-tts`、`piper`、`whisper.cpp` 可执行文件与模型需单独安装。
+- **音频文件需要本地引擎**：浏览器语音在客户端合成，因此那里 `speak` 不返回 `audioPath`（结果中会明确说明）；本地引擎失败并回退到浏览器时同样没有文件。导出文件位于插件自有的受限目录 —— 位置、命名与清理规则见「音频文件导出」。
 - **录音格式**：浏览器按其原生 MediaRecorder 编解码器录音；whisper.cpp 可能要求 WAV 录音配置或服务端转换。
 - **设置重载生效**：设置页签追加到 profile patch；重载 profile（或重启 Web 应用）后生效。
 - **无该词汇表的宿主上实时播放历史为空**：在 `0.1.1-rc.2`、`0.1.2-alpha` 线、`0.1.2-rc.1` 与 `0.1.6-alpha.2` 上，宿主词汇表不认识 `dsh-talk/speech`，因此门不写入任何内容，客户端的会话级播放列表保持为空；`talk/latest(sessionId)` 仍返回最新一条朗读与「已跳过」计数。朗读本身、麦克风、设置页签与工具均不受影响。
@@ -177,7 +193,7 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 pnpm install        # node ^22.19 || >=24
 pnpm run typecheck  # tsc：src + tests，对照本地 harness checkout
 pnpm run typecheck:ci  # tsc：对照已发布的 0.1.7-alpha.2 类型（无 paths）
-pnpm test           # vitest：86 个测试、15 个套件
+pnpm test           # vitest：108 个测试、16 个套件
 pnpm run build      # tsc 声明 + tsdown bundle（lib/）
 pnpm run verify:self-contained  # 依赖声明全部来自 registry
 pnpm run verify:artifacts       # 构建产物 ESM 面 + client ModuleLoader 握手
