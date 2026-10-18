@@ -112,6 +112,22 @@ Then press the microphone next to the composer and talk; ask the agent to `speak
 > Say "hello" with the speak tool.
 ```
 
+## Remote browsers need a secure origin
+
+The browser microphone (`getUserMedia` / Web Speech / MediaRecorder) only works in a
+**secure context**: `https://…` or `http://localhost` / `http://127.0.0.1`. A plain
+`http://<LAN-IP>:3081` page — including Safari on another machine — will not expose
+the microphone, even if the Talk settings are correct.
+
+For a remote browser, use one of:
+
+- open the Web UI through an HTTPS reverse proxy or tunnel;
+- SSH-forward the port and open `http://localhost:<port>` on the client;
+- keep the UI on the same machine as the browser.
+
+`stt.engine: funasr` / `whisper` changes *where transcription runs*, not the browser
+capture permission; recording still needs the secure context.
+
 ## Configuration
 
 All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cordis.patch.yml` documents each key inline.

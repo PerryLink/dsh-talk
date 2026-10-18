@@ -111,6 +111,21 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 
 > 如果 pnpm 对本包报 `ERR_PNPM_IGNORED_BUILDS`（esbuild 的平台二进制无害校验），在你的 `pnpm-workspace.yaml` 中加入 `allowBuilds: { esbuild: true }` —— `dsh` CLI 会打印确切片段。
 
+## 远程浏览器需要安全上下文
+
+浏览器麦克风（`getUserMedia` / Web Speech / MediaRecorder）只在**安全上下文**中可用：
+`https://…` 或 `http://localhost` / `http://127.0.0.1`。通过局域网 IP 打开的
+`http://<LAN-IP>:3081`（包括另一台机器上的 Safari）不会暴露麦克风，即使 Talk 设置正确。
+
+远程浏览器请使用：
+
+- 通过 HTTPS 反向代理或隧道打开 Web UI；
+- 用 SSH 转发端口，在客户端打开 `http://localhost:<port>`；
+- 让 UI 与浏览器在同一台机器上。
+
+`stt.engine: funasr` / `whisper` 改变的是*转写在哪里运行*，不是浏览器采集权限；
+录音仍然需要安全上下文。
+
 ## 配置
 
 所有可调项都是 Schemastery `Config` 字段（可在 cordis.yml 中修改）。`cordis.patch.yml` 内联说明了每个键。

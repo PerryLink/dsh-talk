@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.25] - 2026-10-19
+
+### Docs
+
+- Document that remote browsers need a secure origin for the microphone (`https` or `localhost`), including the LAN-Safari failure mode and the HTTPS/SSH-forward workarounds (issue #26). Mirrored in all five READMEs.
+
 ## [0.3.24] - 2026-10-18
 
 ### Changed

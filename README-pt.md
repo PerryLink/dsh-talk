@@ -102,6 +102,22 @@ Depois pressione o microfone ao lado do compositor e fale; ou peça ao agente pa
 > Diga "olá" com a ferramenta speak.
 ```
 
+## Navegadores remotos precisam de uma origem segura
+
+O microfone do navegador (`getUserMedia` / Web Speech / MediaRecorder) só funciona em um
+**contexto seguro**: `https://…` ou `http://localhost` / `http://127.0.0.1`. Uma página
+`http://<IP-LAN>:3081` — inclusive Safari em outra máquina — não expõe o microfone, mesmo
+com as configurações do Talk corretas.
+
+Para um navegador remoto, use uma destas opções:
+
+- abrir a Web UI por um proxy reverso HTTPS ou túnel;
+- encaminhar a porta por SSH e abrir `http://localhost:<porta>` no cliente;
+- manter a UI na mesma máquina do navegador.
+
+`stt.engine: funasr` / `whisper` muda *onde a transcrição roda*, não a permissão de captura
+do navegador; gravar ainda exige o contexto seguro.
+
 ## Configuração
 
 Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.yml). O `cordis.patch.yml` documenta cada chave.
