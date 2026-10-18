@@ -8,6 +8,7 @@
  */
 
 import z from '@deepseek-ai/schemastery'
+import { resolveExportDir } from './audio-export.ts'
 
 /** Speech-to-text engines. `auto` prefers a configured local engine, then Web Speech. */
 export type SttEngine = 'auto' | 'web' | 'funasr' | 'whisper'
@@ -38,6 +39,18 @@ export const DEFAULT_MAX_AUDIO_CACHE_BYTES = 8 * 1024 * 1024
 
 /** Ceiling for the audio cache. */
 export const MAX_AUDIO_CACHE_BYTES = 64 * 1024 * 1024
+
+/** Default cap on exported audio files retained in the export directory. */
+export const DEFAULT_EXPORT_MAX_FILES = 20
+
+/** Ceiling for the exported-audio file count. */
+export const MAX_EXPORT_MAX_FILES = 1_000
+
+/** Default age cap (minutes) for exported audio files (24 hours). */
+export const DEFAULT_EXPORT_MAX_AGE_MINUTES = 1_440
+
+/** Ceiling for the exported-audio age cap (7 days). */
+export const MAX_EXPORT_MAX_AGE_MINUTES = 10_080
 
 /** Default silence duration (ms) before the recorder auto-ends and submits. */
 export const DEFAULT_VAD_SILENCE_MS = 1_500
@@ -100,6 +113,18 @@ export interface SttConfig {
   }
 }
 
+/** Exported-audio lifecycle: the plugin-owned, bounded file directory. */
+export interface TtsExportConfig {
+  /** Write every locally synthesized utterance to a file (default true). */
+  enabled?: boolean
+  /** Target directory; empty = `<home>/.dsh-talk/audio`, `~` expands to home, a relative path resolves under home. */
+  dir?: string
+  /** Files retained in the directory, counting the one just written (default 20). */
+  maxFiles?: number
+  /** Files older than this many minutes are removed on the next write (default 1440). */
+  maxAgeMinutes?: number
+}
+
 /** Text-to-speech configuration. */
 export interface TtsConfig {
   /** Engine selection: auto | browser | edge-tts | piper (default auto). */
@@ -133,6 +158,8 @@ export interface TtsConfig {
     /** piper voice model file; required for the piper engine. */
     modelPath?: string
   }
+  /** Exported-audio files: where they go and how the directory is bounded. */
+  export?: TtsExportConfig
 }
 
 /** Event announcement configuration. */
@@ -230,6 +257,14 @@ export interface ResolvedConfig {
   piperCommand: string
   /** piper model path, or null. */
   piperModelPath: string | null
+  /** Whether locally synthesized audio is also written to a file. */
+  ttsExportEnabled: boolean
+  /** Absolute directory exported audio lands in. */
+  ttsExportDir: string
+  /** Files retained in the export directory. */
+  ttsExportMaxFiles: number
+  /** Age cap (minutes) for exported audio files. */
+  ttsExportMaxAgeMinutes: number
   /** Whether any event announcements are enabled. */
   announceEnabled: boolean
   /** Announce turn completion. */
@@ -297,6 +332,13 @@ export const Config: z<Config> = z.object({
     piper: z.object({
       command: z.string().default('piper'),
       modelPath: z.string(),
+    }),
+    export: z.object({
+      enabled: z.boolean().default(true),
+      // Empty = the plugin's own default directory (never the workspace root).
+      dir: z.string().default(''),
+      maxFiles: z.number().min(1).max(MAX_EXPORT_MAX_FILES).default(DEFAULT_EXPORT_MAX_FILES),
+      maxAgeMinutes: z.number().min(1).max(MAX_EXPORT_MAX_AGE_MINUTES).default(DEFAULT_EXPORT_MAX_AGE_MINUTES),
     }),
   }),
   announce: z.object({
@@ -414,6 +456,22 @@ export function resolveConfig(config: Config | undefined): ResolvedConfig {
   const piperCommand = stringOf(tts.piper?.command, 'piper', 'tts.piper.command')
   if (piperCommand.length === 0) throw new Error('dsh-talk: config.tts.piper.command must not be empty')
   const piperModelPath = nullableStringOf(tts.piper?.modelPath, 'tts.piper.modelPath')
+  const ttsExportEnabled = booleanOf(tts.export?.enabled, true, 'tts.export.enabled')
+  const ttsExportDir = resolveExportDir(tts.export?.dir)
+  const ttsExportMaxFiles = numberOf(
+    tts.export?.maxFiles,
+    DEFAULT_EXPORT_MAX_FILES,
+    1,
+    MAX_EXPORT_MAX_FILES,
+    'tts.export.maxFiles',
+  )
+  const ttsExportMaxAgeMinutes = numberOf(
+    tts.export?.maxAgeMinutes,
+    DEFAULT_EXPORT_MAX_AGE_MINUTES,
+    1,
+    MAX_EXPORT_MAX_AGE_MINUTES,
+    'tts.export.maxAgeMinutes',
+  )
 
   // Cross-field consistency: an engine the user explicitly selected must be
   // fully addressable, or the row fails at load instead of at first use.
@@ -473,6 +531,10 @@ export function resolveConfig(config: Config | undefined): ResolvedConfig {
     edgeTtsVoice,
     piperCommand,
     piperModelPath,
+    ttsExportEnabled,
+    ttsExportDir,
+    ttsExportMaxFiles,
+    ttsExportMaxAgeMinutes,
     announceEnabled,
     announceOnTurnEnd,
     announceOnApproval,

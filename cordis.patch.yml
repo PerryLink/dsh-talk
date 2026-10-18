@@ -77,6 +77,20 @@
             command: piper
             # piper voice model file; required for the piper engine.
             modelPath: ''
+          # Exported audio files: every locally synthesized utterance is also
+          # written to a file whose absolute path the speak tool returns as
+          # audioPath (hand it to another tool's file argument). The browser
+          # engine has no host bytes, so it reports "unsupported" instead.
+          export:
+            # Write locally synthesized audio to a file.
+            enabled: true
+            # Target directory; empty = "<home>/.dsh-talk/audio". "~" expands to
+            # home; a relative path resolves under home, never the workspace.
+            dir: ''
+            # Files retained in the directory, counting the one just written (1..1000).
+            maxFiles: 20
+            # Files older than this many minutes are pruned on the next write (1..10080).
+            maxAgeMinutes: 1440
         # Event announcements.
         announce:
           # Master switch for all event announcements.

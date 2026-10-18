@@ -44,6 +44,22 @@ export { TalkService, resolveSttEngine, resolveTtsEngine, type SpeakOptions, typ
 export { speakTool, renderSpeak } from './tool.ts'
 export { sanitizeText, redactSecrets, displayPath } from './sanitize.ts'
 export { edgeTtsArgv, piperSpec, whisperArgv, runCommand, synthesize, transcribeWhisper, transcribeFunasr, EngineFailure } from './engine.ts'
+export {
+  BROWSER_EXPORT_NOTE,
+  DEFAULT_EXPORT_DIRECTORY,
+  EXPORT_FILE_PATTERN,
+  exportExtension,
+  exportFileName,
+  exportSynthesizedAudio,
+  pruneExports,
+  resolveExportDir,
+  selectPrunableExports,
+  type AudioExportState,
+  type ExportEntry,
+  type ExportOutcome,
+  type ExportPolicy,
+  type LocalTtsEngine,
+} from './audio-export.ts'
 export { appendSettingsFragment, mergeTalkRowConfig, renderSettingsFragment, validateSettingsInput, yamlScalar } from './settings-patch.ts'
 export { rmsOf, isSpeechFrame, advanceSilence, silenceTrips } from './client/vad.ts'
 export type { SpeechProvider, SpeechSttProvider, SpeechTtsProvider } from './provider.ts'

@@ -1,10 +1,13 @@
 // scripts/loader-runner.mjs — real Loader composition runner for dsh-talk
 // (community five-layer model, layer 4). An independent process boots a real
 // Context, mounts the vendored Loader with the Include builtin, provides a
-// scripted subprocess face (the browser engine path never touches it), reads
-// the given cordis.yml (session + system-prompt + tools service rows, then the
-// plugin row), and asserts the plugin's contributions through the authoritative
-// registries plus one real behavior: the speak tool through the browser engine.
+// scripted subprocess face (the browser engine path never touches it, and the
+// audio-export path gets a real media file written where the engine's argv
+// points), reads the given cordis.yml (session + system-prompt + tools service
+// rows, then the plugin row), and asserts the plugin's contributions through
+// the authoritative registries plus real behavior: the speak tool through the
+// browser engine, and — when DSH_LOADER_EXPORT_DIR is set — the audio file the
+// local engine path exports.
 //
 // Usage: node scripts/loader-runner.mjs <cordis.yml>
 // Exit 0 prints DSH_LOADER_RESULT <json>; any load or assertion failure exits
@@ -15,8 +18,9 @@ import Include from '@deepseek-ai/cordis-plugin-include'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
 import { ToolCallId as CallId } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
+import { readFile, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { dirname, resolve } from 'node:path'
+import { dirname, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const configArgument = process.argv[2]
@@ -24,6 +28,9 @@ if (configArgument === undefined) {
   console.error('usage: loader-runner.mjs <cordis.yml>')
   process.exit(2)
 }
+
+/** Bytes the scripted edge-tts face writes where `--write-media` points. */
+const SYNTH_BYTES = 'ID3-loader-runner-audio'
 
 const configPath = resolve(configArgument)
 const configRequire = createRequire(resolve(import.meta.dirname, '../package.json'))
@@ -42,9 +49,29 @@ try {
     },
   })
   ctx.loader.builtins.include = Include
-  // The plugin hard-injects `subprocess`; the browser-engine speak path never
-  // calls it, so a scripted face suffices for this composition.
-  ctx.provide('subprocess', { spawn: () => { throw new Error('subprocess not used by the browser engine') } })
+  // The plugin hard-injects `subprocess`. The browser-engine path never calls
+  // it (any unexpected argv throws), and the local-engine path needs a real
+  // file where `--write-media` points — exactly what a real edge-tts does.
+  ctx.provide('subprocess', {
+    spawn(spec) {
+      const marker = spec.argv.indexOf('--write-media')
+      if (marker === -1 || marker + 1 >= spec.argv.length) {
+        throw new Error(`subprocess face: unexpected argv ${JSON.stringify(spec.argv)}`)
+      }
+      const outPath = spec.argv[marker + 1]
+      const emptyReader = { readFrom: () => ({ text: '', nextOffset: 0, lossy: false }) }
+      return {
+        stdin: undefined,
+        stdout: undefined,
+        stderr: undefined,
+        control: undefined,
+        collected: { stdout: emptyReader, stderr: emptyReader },
+        done: writeFile(outPath, SYNTH_BYTES, 'binary').then(() => ({ exitCode: 0, signal: null })),
+        terminate: () => undefined,
+        waitForExit: async () => true,
+      }
+    },
+  })
   await ctx.loader.create({
     name: 'cordis:include',
     config: { path: pathToFileURL(configPath).href },
@@ -92,6 +119,36 @@ try {
     spoken: value.spoken,
     engine: value.engine,
   }
+
+  // Real behavior: the local-engine path exports a real audio file. Opt-in via
+  // the environment so a run with the production default export directory
+  // (under the user's home) never writes anything.
+  const exportDir = process.env.DSH_LOADER_EXPORT_DIR
+  if (exportDir !== undefined && exportDir !== '') {
+    const local = await ctx.tools.execute({
+      callId: CallId('dsh-talk-loader-runner-export'),
+      name: 'speak',
+      arguments: { text: 'hello', engine: 'edge-tts', interrupt: false },
+      agent,
+      signal: new AbortController().signal,
+    })
+    const exported = local.isError === false ? local.value : null
+    if (exported === null || exported.audioExport !== 'file' || typeof exported.audioPath !== 'string') {
+      throw new Error(`Loader composition: local speak returned ${JSON.stringify({ isError: local.isError, value: local.value })}`)
+    }
+    const resolvedExport = resolve(exportDir)
+    if (!resolve(exported.audioPath).startsWith(resolvedExport + sep)) {
+      throw new Error(`Loader composition: ${exported.audioPath} is outside the configured export directory ${resolvedExport}`)
+    }
+    const written = await readFile(exported.audioPath)
+    if (written.byteLength !== SYNTH_BYTES.length) {
+      throw new Error(`Loader composition: exported file holds ${written.byteLength} bytes, expected ${SYNTH_BYTES.length}`)
+    }
+    summary.audioExport = exported.audioExport
+    summary.audioPath = exported.audioPath
+    summary.fileBytes = written.byteLength
+  }
+
   process.stdout.write(`DSH_LOADER_RESULT ${JSON.stringify(summary)}\n`)
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error))

@@ -11,7 +11,10 @@
 
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
+import { mkdtempSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { KNOWN_SESSION_EVENT_TYPES } from '@deepseek-ai/dsh-session'
 import SessionStore, { SessionId, type Session } from '@deepseek-ai/dsh-session'
 import {
@@ -118,6 +121,29 @@ export interface Harness {
   readonly subprocess: FakeSubprocessRuntime
   /** The mounted talk service (for assertions about the speech-log outcome table). */
   readonly service: TalkService
+  /** The audio-export directory this mount writes into (a per-mount temp dir unless the test set one). */
+  readonly exportDir: string
+}
+
+/**
+ * Point one mount's audio export at a per-mount temp directory. Synthesis in a
+ * test would otherwise write into the developer's home directory
+ * (`<home>/.dsh-talk/audio` is the production default); a test that sets
+ * `tts.export.dir` itself keeps its own value. `tests/global-setup.ts` removes
+ * the directories one run created when that run ends.
+ *
+ * @param config - the raw plugin config the test passed.
+ * @returns the config with `tts.export.dir` filled, plus the directory used.
+ */
+function withTemporaryExportDir(config: Record<string, unknown>): { config: Record<string, unknown>; exportDir: string } {
+  const tts = (config['tts'] ?? {}) as Record<string, unknown>
+  const exportConfig = (tts['export'] ?? {}) as Record<string, unknown>
+  const configured = exportConfig['dir']
+  const exportDir = typeof configured === 'string' && configured !== '' ? configured : mkdtempSync(join(tmpdir(), 'dsh-talk-export-'))
+  return {
+    config: { ...config, tts: { ...tts, export: { ...exportConfig, dir: exportDir } } },
+    exportDir,
+  }
 }
 
 /**
@@ -167,12 +193,13 @@ export async function mountHarness(config: Record<string, unknown> = {}): Promis
   new FakeSubprocessRuntime(ctx)
 
   const plugin = await import('../src/index.ts')
-  await ctx.plugin(plugin as unknown as import('@deepseek-ai/cordis').Plugin, config)
+  const scoped = withTemporaryExportDir(config)
+  await ctx.plugin(plugin as unknown as import('@deepseek-ai/cordis').Plugin, scoped.config)
 
   const subprocess = ctx.get('subprocess') as unknown as FakeSubprocessRuntime
   const agent = makeAgent(session)
   const service = ctx.get('talk') as unknown as TalkService
-  return { ctx, session, agent, subprocess, service }
+  return { ctx, session, agent, subprocess, service, exportDir: scoped.exportDir }
 }
 
 /** Re-exported for specs that script subprocess outcomes directly. */

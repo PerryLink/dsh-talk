@@ -126,13 +126,14 @@ describe('speak tool three interfaces', () => {
         signal: new AbortController().signal,
       })
       expect(result.isError).toBe(false)
-      // Canonical value: the model-facing speak outcome.
-      expect(result.value).toMatchObject({ spoken: true, engine: 'browser', audioBytes: 0 })
+      // Canonical value: the model-facing speak outcome. The browser engine has
+      // no host bytes, so the export state is reported explicitly.
+      expect(result.value).toMatchObject({ spoken: true, engine: 'browser', audioBytes: 0, audioExport: 'unsupported' })
       expect(typeof (result.value as { utteranceId?: string }).utteranceId).toBe('string')
       // Content blocks: the rendered model text.
       expect(result.content).toEqual([{
         type: 'text',
-        text: 'Spoke hello aloud with the browser engine.',
+        text: 'Spoke hello aloud with the browser engine. No audio file: the browser engine synthesizes in the browser.',
       }])
     } finally {
       await harness.ctx.fiber.dispose()
