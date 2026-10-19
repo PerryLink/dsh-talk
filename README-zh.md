@@ -153,6 +153,22 @@ Spoke hello aloud with the browser engine. No audio file: the browser engine syn
 
 *来源 `plugins/dsh-talk/tests/lifecycle.spec.ts:124-137; renderer at src/tool.ts:47-64`*
 
+#### 失败分支
+
+**输入**
+
+~~~text
+{"text":"   "}
+~~~
+
+**输出**
+
+~~~text
+Error: dsh-talk: speak text must not be empty
+~~~
+
+*来源 `plugins/dsh-talk/src/tool.ts:124; plugins/dsh-talk/tests/tool.spec.ts:41-44`*
+
 #### 简短示例
 
 - `talk:status`

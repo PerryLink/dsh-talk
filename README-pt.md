@@ -145,6 +145,22 @@ Spoke hello aloud with the browser engine. No audio file: the browser engine syn
 
 *Observado em `plugins/dsh-talk/tests/lifecycle.spec.ts:124-137; renderer at src/tool.ts:47-64`*
 
+#### Ramo de falha
+
+**Entrada**
+
+~~~text
+{"text":"   "}
+~~~
+
+**Saída**
+
+~~~text
+Error: dsh-talk: speak text must not be empty
+~~~
+
+*Observado em `plugins/dsh-talk/src/tool.ts:124; plugins/dsh-talk/tests/tool.spec.ts:41-44`*
+
 #### Exemplos breves
 
 - `talk:status`
