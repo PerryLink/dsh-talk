@@ -119,6 +119,19 @@ Para um navegador remoto, use uma destas opções:
 `stt.engine: funasr` / `whisper` muda *onde a transcrição roda*, não a permissão de captura
 do navegador; gravar ainda exige o contexto seguro.
 
+### Exemplos
+
+São as superfícies reais; a aba de ajustes e o botão de microfone são as entradas de UI.
+
+#### Exemplo detalhado
+
+- `speak`
+
+#### Exemplos breves
+
+- `talk:status`
+- `talk:transcribe`
+
 ## Configuração
 
 Todos os ajustes são campos `Config` do Schemastery (alteráveis pelo cordis.yml). O `cordis.patch.yml` documenta cada chave.

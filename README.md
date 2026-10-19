@@ -128,6 +128,19 @@ For a remote browser, use one of:
 `stt.engine: funasr` / `whisper` changes *where transcription runs*, not the browser
 capture permission; recording still needs the secure context.
 
+### Examples
+
+These are the real surfaces; the settings tab and mic button are the UI entry points.
+
+#### Detailed example
+
+- `speak`
+
+#### Brief examples
+
+- `talk:status`
+- `talk:transcribe`
+
 ## Configuration
 
 All tunables are Schemastery `Config` fields (changeable from cordis.yml). `cordis.patch.yml` documents each key inline.

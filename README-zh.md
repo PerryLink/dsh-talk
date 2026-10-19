@@ -127,6 +127,19 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 `stt.engine: funasr` / `whisper` 改变的是*转写在哪里运行*，不是浏览器采集权限；
 录音仍然需要安全上下文。
 
+### 示例
+
+以下为真实接口；设置页与麦克风按钮是 UI 入口。
+
+#### 详细示例
+
+- `speak`
+
+#### 简短示例
+
+- `talk:status`
+- `talk:transcribe`
+
 ## 配置
 
 所有可调项都是 Schemastery `Config` 字段（可在 cordis.yml 中修改）。`cordis.patch.yml` 内联说明了每个键。
