@@ -134,7 +134,25 @@ These are the real surfaces; the settings tab and mic button are the UI entry po
 
 #### Detailed example
 
-- `speak`
+**Command**
+
+~~~sh
+speak
+~~~
+
+**Input**
+
+~~~json
+{"text":"hello","engine":"browser"}
+~~~
+
+**Output**
+
+~~~text
+Spoke hello aloud with the browser engine. No audio file: the browser engine synthesizes in the browser.
+~~~
+
+*Observed from `plugins/dsh-talk/tests/lifecycle.spec.ts:124-137; renderer at src/tool.ts:47-64`*
 
 #### Brief examples
 

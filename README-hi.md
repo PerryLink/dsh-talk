@@ -125,7 +125,25 @@ dsh --profile web --dump-config | grep -A2 'id: talk'
 
 #### विस्तृत उदाहरण
 
-- `speak`
+**कमांड**
+
+~~~sh
+speak
+~~~
+
+**इनपुट**
+
+~~~json
+{"text":"hello","engine":"browser"}
+~~~
+
+**आउटपुट**
+
+~~~text
+Spoke hello aloud with the browser engine. No audio file: the browser engine synthesizes in the browser.
+~~~
+
+*स्रोत `plugins/dsh-talk/tests/lifecycle.spec.ts:124-137; renderer at src/tool.ts:47-64`*
 
 #### संक्षिप्त उदाहरण
 

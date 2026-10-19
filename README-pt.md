@@ -125,7 +125,25 @@ São as superfícies reais; a aba de ajustes e o botão de microfone são as ent
 
 #### Exemplo detalhado
 
-- `speak`
+**Comando**
+
+~~~sh
+speak
+~~~
+
+**Entrada**
+
+~~~json
+{"text":"hello","engine":"browser"}
+~~~
+
+**Saída**
+
+~~~text
+Spoke hello aloud with the browser engine. No audio file: the browser engine synthesizes in the browser.
+~~~
+
+*Observado em `plugins/dsh-talk/tests/lifecycle.spec.ts:124-137; renderer at src/tool.ts:47-64`*
 
 #### Exemplos breves
 

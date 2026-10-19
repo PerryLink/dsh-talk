@@ -125,7 +125,25 @@ Son las superficies reales; la pestaña de ajustes y el botón de micrófono son
 
 #### Ejemplo detallado
 
-- `speak`
+**Comando**
+
+~~~sh
+speak
+~~~
+
+**Entrada**
+
+~~~json
+{"text":"hello","engine":"browser"}
+~~~
+
+**Salida**
+
+~~~text
+Spoke hello aloud with the browser engine. No audio file: the browser engine synthesizes in the browser.
+~~~
+
+*Observado en `plugins/dsh-talk/tests/lifecycle.spec.ts:124-137; renderer at src/tool.ts:47-64`*
 
 #### Ejemplos breves
 
