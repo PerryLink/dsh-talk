@@ -56,11 +56,11 @@ Voice-first session loop for DeepSeek Harness: talk to it, hear it answer.
 
 Press the mic, speak, and the reply is spoken back — with speak-to-interrupt.
 
-![Terminal demo of dsh-talk: dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-hero.png)
+![Workflow diagram for dsh-talk: install → open panel → act.](docs/assets/dsh-talk-flow.svg)
 
-![Animated terminal demo of dsh-talk](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.gif)
+*Workflow overview: install → open panel → act. The examples below use the real command surface.*
 
-*The same run, animated.*
+
 
 ## Compatibility
 

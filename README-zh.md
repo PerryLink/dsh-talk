@@ -46,9 +46,10 @@ DeepSeek Harness 的 voice-first 会话闭环：对它说话，听它回答。
 
 按下麦克风说话，回复会被朗读出来——说话即打断。
 
-![dsh-talk 终端演示：dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-hero.png)
+![dsh-talk 工作流图：安装 → 打开面板 → 操作。](docs/assets/dsh-talk-flow.svg)
 
-![Animated terminal demo of dsh-talk](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.gif)
+*工作流概览：安装 → 打开面板 → 操作。下面的示例使用实际命令面。*
+
 
 *同一次运行，动图版。*
 

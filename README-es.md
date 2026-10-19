@@ -55,9 +55,10 @@ Bucle de sesión con voz primero para DeepSeek Harness: háblale y escucha su re
 
 Pulsa el micrófono, habla y la respuesta se lee en voz alta — hablar interrumpe.
 
-![Demostración de terminal de dsh-talk: dsh-talk — install, verify the row, then talk to the session](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-hero.png)
+![Diagrama de flujo de dsh-talk: instalar → abrir panel → actuar.](docs/assets/dsh-talk-flow.svg)
 
-![Animated terminal demo of dsh-talk](https://raw.githubusercontent.com/PerryLink/dsh-talk/main/docs/assets/dsh-talk-demo.gif)
+*Resumen del flujo: instalar → abrir panel → actuar. Los ejemplos siguientes usan la superficie de comandos real.*
+
 
 *La misma ejecución, animada.*
 
