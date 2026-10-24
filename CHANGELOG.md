@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.26] - 2026-10-24
+
+### Fixed
+
+- **Pin `zod` to 4.4.3 and ignore its dependabot bumps until the host packages align.** The npm-minor-patch group pulled `zod@4.6.7` alongside the host's `4.4.3`; the duplicated `ZodType` identity breaks `tsc`.
+
 ## [0.3.25] - 2026-10-19
 
 ### Docs
