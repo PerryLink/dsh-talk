@@ -41,7 +41,9 @@
     "README-es.md",
     "README-pt.md",
     "README-hi.md",
-    "LICENSE"
+    "LICENSE",
+    "PRIVACY.md",
+    "icon.svg"
   ],
   "dsh": {
     "manifestVersion": 1,
@@ -211,5 +213,6 @@
   "funding": {
     "type": "individual",
     "url": "https://github.com/sponsors/PerryLink"
-  }
+  },
+  "icon": "icon.svg"
 }
