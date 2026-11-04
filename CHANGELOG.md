@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Declare `dsh.capabilities` (`network:egress`, `subprocess`, `tools:register`) and empty `dsh.labels`; the npm artifact was published before the capabilities wave.
+
+
 ## [0.3.26] - 2026-10-24
 
 ### Fixed
@@ -59,7 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Correct the release date in the previous section, which was stamped with the literal string `undefined` by the release stamper. No content or behaviour change; the version is bumped only because npm will not republish an existing version.
-
 
 ## [Unreleased]
 
