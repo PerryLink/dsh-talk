@@ -13,23 +13,31 @@ import { mountHarness, withKnownSpeechVocabulary, type Harness } from './harness
 
 let callCounter = 0
 
-/** Execute-parameter brand of the call id (CallId on rc.2, ToolCallId on 0.1.2-alpha). */
+/** Execute-parameter shape of 0.2.2's batch execution API. */
 type ExecuteArgs = Parameters<Harness['ctx']['tools']['execute']>[0]
 
+/** One raw model call, as 0.2.2's `ToolBatchInput.calls` takes it. */
+type ToolCall = ExecuteArgs['calls'][number]
+
 /** Build a call id typed to whichever brand the resolved tool registry expects. */
-function callIdOf(id: string): ExecuteArgs['callId'] {
-  return id as ExecuteArgs['callId']
+function callIdOf(id: string): ToolCall['id'] {
+  return id as ToolCall['id']
 }
 
 async function callTool(harness: Harness, args: unknown): Promise<ToolExecutionResult> {
   callCounter += 1
-  return harness.ctx.tools.execute({
-    callId: callIdOf(`talk-spec-${callCounter}`),
-    name: 'speak',
-    arguments: args,
+  const batch = await harness.ctx.tools.execute({
+    calls: [{
+      type: 'tool-call',
+      id: callIdOf(`talk-spec-${callCounter}`),
+      name: 'speak',
+      // 0.2.2's batch API takes the raw JSON string the model produced.
+      arguments: JSON.stringify(args),
+    }],
     agent: harness.agent,
     signal: new AbortController().signal,
   })
+  return batch.results[0]!.result
 }
 
 describe('speak tool', () => {

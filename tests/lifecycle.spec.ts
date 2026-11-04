@@ -116,16 +116,23 @@ describe('speak tool three interfaces', () => {
       })
       expect(schema!.parameters.required).toContain('text')
 
-      const result = await harness.ctx.tools.execute({
-        // Ruler-agnostic brand: rc.2 names it CallId, 0.1.2-alpha ToolCallId;
-        // the cast derives whichever brand the resolved registry expects.
-        callId: 'dsh-talk-three-interfaces' as unknown as Parameters<typeof harness.ctx.tools.execute>[0]['callId'],
-        name: 'speak',
-        arguments: { text: 'hello', engine: 'browser' },
+      // 0.2.2's batch API: raw model calls in, ordered settled results out.
+      type ToolCall = Parameters<typeof harness.ctx.tools.execute>[0]['calls'][number]
+      const batch = await harness.ctx.tools.execute({
+        calls: [{
+          type: 'tool-call',
+          // Ruler-agnostic brand: rc.2 names it CallId, 0.1.2-alpha ToolCallId;
+          // the cast derives whichever brand the resolved registry expects.
+          id: 'dsh-talk-three-interfaces' as ToolCall['id'],
+          name: 'speak',
+          arguments: JSON.stringify({ text: 'hello', engine: 'browser' }),
+        }],
         agent: harness.agent,
         signal: new AbortController().signal,
       })
+      const result = batch.results[0]!.result
       expect(result.isError).toBe(false)
+      if (result.isError) throw new Error('expected the speak tool to succeed')
       // Canonical value: the model-facing speak outcome. The browser engine has
       // no host bytes, so the export state is reported explicitly.
       expect(result.value).toMatchObject({ spoken: true, engine: 'browser', audioBytes: 0, audioExport: 'unsupported' })

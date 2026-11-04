@@ -1,11 +1,17 @@
 # Changelog
 
-## [0.3.28] - 2026-11-04
+## [Unreleased]
 
 ### Changed
 
-- Declare `dsh.capabilities` (`network:egress`, `subprocess`, `tools:register`) and empty `dsh.labels`; the npm artifact was published before the capabilities wave.
+- **Host 0.2.2 line support.** devDependencies move from 0.2.1-rc.2 to 0.2.2-rc.1, cordis to 4.1.0 / cordis-plugin-include 1.1.0 / cordis-plugin-loader 1.1.0, and schemastery to ~3.19.0 so a single copy resolves against `@deepseek-ai/dsh-llm` 0.2.2. `engines.dsh` appends `>=0.2.2-0 <0.3.0` (append-only) and `engines.node` becomes `^22.19.0 || >=24.9.0`.
+- **Add `@deepseek-ai/dsh-package-manifest` and `@deepseek-ai/dsh-tool-executor-native`.** 0.2.2's published `dsh-llm` types import the former but its manifest does not declare it; 0.2.2 moved raw batch execution behind a pluggable executor, so a bare tools runtime has no `ctx.tools.execute()` provider.
 
+### Fixed
+
+- **Tool execution uses the 0.2.2 batch API.** `ctx.tools.execute()` now takes `{ calls, signal }` and returns `{ results }`; the specs and the Loader runner mount the native executor and read `batch.results[0].result`, with call arguments serialized to the raw JSON string the model produces.
+- **Projection registration is asynchronous.** `sessionProjections.register()` now returns a promise for a handle whose `dispose()` releases it; the effect hands back a disposer that awaits the handle, so unload still unregisters `talk:speech`.
+- **Loader row failures surface on the fiber.** `loader.await()` no longer rejects when a row fails under cordis 4.1.0; the Loader runner's existing `rethrowFirstFailedRow()` awaits each failed row's fiber and rethrows its own reason, so invalid compositions still fail loud.
 
 ## [0.3.26] - 2026-10-24
 
@@ -66,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Correct the release date in the previous section, which was stamped with the literal string `undefined` by the release stamper. No content or behaviour change; the version is bumped only because npm will not republish an existing version.
+
 
 ## [Unreleased]
 

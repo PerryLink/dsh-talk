@@ -39,15 +39,22 @@ afterEach(async () => {
   }
 })
 
+/** One raw model call, as 0.2.2's `ToolBatchInput.calls` takes it. */
+type ToolCall = Parameters<Harness['ctx']['tools']['execute']>[0]['calls'][number]
+
 /** Execute the speak tool through the real registry. */
 async function speak(harness: Harness, args: unknown) {
-  return harness.ctx.tools.execute({
-    callId: `export-spec-${Math.random().toString(16).slice(2)}` as unknown as Parameters<Harness['ctx']['tools']['execute']>[0]['callId'],
-    name: 'speak',
-    arguments: args,
+  const batch = await harness.ctx.tools.execute({
+    calls: [{
+      type: 'tool-call',
+      id: `export-spec-${Math.random().toString(16).slice(2)}` as ToolCall['id'],
+      name: 'speak',
+      arguments: JSON.stringify(args),
+    }],
     agent: harness.agent,
     signal: new AbortController().signal,
   })
+  return batch.results[0]!.result
 }
 
 /** The engine scripted to write `bytes` where the argv points. */

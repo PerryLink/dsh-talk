@@ -102,18 +102,24 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
 
   // The `talk:speech` projection unit: last-wins fold of spoken utterances,
   // read by the web client's record button through useProjection.
+  // 0.2.2 makes registration asynchronous and returns a handle whose `dispose()`
+  // (not a bare disposer) releases it; hand the effect a disposer that awaits
+  // the handle, so unload still releases the unit.
   ctx.inject(['sessionProjections'], (projectionCtx) => {
-    projectionCtx.effect(() => projectionCtx.sessionProjections.register<'talk:speech', ReturnType<typeof initTalkSpeechProjection>>({
-      key: 'talk:speech',
-      stateSchema: talkSpeechProjectionSchema,
-      init: initTalkSpeechProjection,
-      apply: applyTalkSpeechProjection,
-      wire: {
-        viewSchema: talkSpeechProjectionSchema,
-        view: viewTalkSpeechProjection,
-      },
-      stateVersion: TALK_SPEECH_PROJECTION_STATE_VERSION,
-    }), 'dsh-talk: talk:speech projection')
+    projectionCtx.effect(async () => {
+      const handle = await projectionCtx.sessionProjections.register<'talk:speech', ReturnType<typeof initTalkSpeechProjection>>({
+        key: 'talk:speech',
+        stateSchema: talkSpeechProjectionSchema,
+        init: initTalkSpeechProjection,
+        apply: applyTalkSpeechProjection,
+        wire: {
+          viewSchema: talkSpeechProjectionSchema,
+          view: viewTalkSpeechProjection,
+        },
+        stateVersion: TALK_SPEECH_PROJECTION_STATE_VERSION,
+      })
+      return () => handle.dispose()
+    }, 'dsh-talk: talk:speech projection')
   })
 
   // Consumer — the announcement listeners drive the talk service from host events.

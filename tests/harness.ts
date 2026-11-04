@@ -26,6 +26,7 @@ import {
   type SubprocessSpawnSpec,
 } from '@deepseek-ai/dsh-subprocess'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
+import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { SPEECH_EVENT } from '../src/speech.ts'
 import type { TalkService } from '../src/service.ts'
@@ -184,6 +185,9 @@ export async function mountHarness(config: Record<string, unknown> = {}): Promis
   session.append('turn/start', { turn: 1 })
   ctx.provide('systemPrompt', { tools: () => () => undefined, section: () => () => undefined } as never)
   await ctx.plugin(ToolRuntime)
+  // 0.2.2 moved raw batch execution behind a pluggable executor: mounting the
+  // tool runtime alone leaves ctx.tools.execute() without a provider.
+  await ctx.plugin(NativeToolExecutor)
   // Direct construction binds the registry's own `session/event` listener to
   // THIS context; `ctx.plugin()` would mount it on a child scope whose
   // listener never sees root-emitted session events (production resolves the

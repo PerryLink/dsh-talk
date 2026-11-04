@@ -101,13 +101,20 @@ try {
   })
 
   // Real behavior: the speak tool through the browser engine (no subprocess I/O).
-  const result = await ctx.tools.execute({
-    callId: CallId('dsh-talk-loader-runner'),
-    name: 'speak',
-    arguments: { text: 'hello', engine: 'browser' },
+  const batch = await ctx.tools.execute({
+    calls: [{
+      type: 'tool-call',
+      id: CallId('dsh-talk-loader-runner'),
+      name: 'speak',
+      arguments: JSON.stringify({ text: 'hello', engine: 'browser' }),
+    }],
     agent,
     signal: new AbortController().signal,
   })
+  const result = batch.results[0]?.result
+  if (result === undefined) {
+    throw new Error('Loader composition: the speak batch returned no result')
+  }
   const value = result.isError === false ? result.value : null
   if (value === null || value.spoken !== true || value.engine !== 'browser') {
     throw new Error(`Loader composition: speak returned ${JSON.stringify({ isError: result.isError, value: result.value })}`)
@@ -125,13 +132,20 @@ try {
   // (under the user's home) never writes anything.
   const exportDir = process.env.DSH_LOADER_EXPORT_DIR
   if (exportDir !== undefined && exportDir !== '') {
-    const local = await ctx.tools.execute({
-      callId: CallId('dsh-talk-loader-runner-export'),
-      name: 'speak',
-      arguments: { text: 'hello', engine: 'edge-tts', interrupt: false },
+    const localBatch = await ctx.tools.execute({
+      calls: [{
+        type: 'tool-call',
+        id: CallId('dsh-talk-loader-runner-export'),
+        name: 'speak',
+        arguments: JSON.stringify({ text: 'hello', engine: 'edge-tts', interrupt: false }),
+      }],
       agent,
       signal: new AbortController().signal,
     })
+    const local = localBatch.results[0]?.result
+    if (local === undefined) {
+      throw new Error('Loader composition: the local speak batch returned no result')
+    }
     const exported = local.isError === false ? local.value : null
     if (exported === null || exported.audioExport !== 'file' || typeof exported.audioPath !== 'string') {
       throw new Error(`Loader composition: local speak returned ${JSON.stringify({ isError: local.isError, value: local.value })}`)
