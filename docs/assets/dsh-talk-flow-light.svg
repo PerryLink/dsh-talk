@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" role="img" aria-label="dsh-talk voice loop">
+<title>dsh-talk voice loop</title>
+<rect width="1200" height="480" rx="18" fill="#ffffff"/>
+<text x="60" y="60" fill="#1f2328" font-family="ui-sans-serif,system-ui,sans-serif" font-size="30" font-weight="700">dsh-talk</text>
+<text x="60" y="94" fill="#57606a" font-family="ui-monospace,monospace" font-size="15">voice loop · stt.engine · tts.engine · announce.* · talk/* (Remote)</text>
+<line x1="60" y1="116" x2="1140" y2="116" stroke="#d0d7de"/>
+<rect x="60" y="150" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#4B67B4" stroke-width="2"/>
+<text x="144" y="188" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">mic button</text>
+<text x="144" y="214" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="12">record.*</text>
+<path d="M234 194h48" stroke="#57606a" stroke-width="3"/>
+<path d="M270 187l10 7-10 7" fill="none" stroke="#57606a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="288" y="150" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#d0d7de" stroke-width="2"/>
+<text x="372" y="188" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">MediaRecorder</text>
+<text x="372" y="214" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="12">Web Speech</text>
+<path d="M462 194h48" stroke="#57606a" stroke-width="3"/>
+<path d="M498 187l10 7-10 7" fill="none" stroke="#57606a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="516" y="150" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#4B67B4" stroke-width="2"/>
+<text x="600" y="188" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">talk/transcribe</text>
+<text x="600" y="214" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="12">stt.engine</text>
+<path d="M690 194h48" stroke="#57606a" stroke-width="3"/>
+<path d="M726 187l10 7-10 7" fill="none" stroke="#57606a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="744" y="150" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#d0d7de" stroke-width="2"/>
+<text x="828" y="188" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">FunASR</text>
+<text x="828" y="214" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="12">whisper.cpp</text>
+<path d="M918 194h48" stroke="#57606a" stroke-width="3"/>
+<path d="M954 187l10 7-10 7" fill="none" stroke="#57606a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="972" y="150" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#d0d7de" stroke-width="2"/>
+<text x="1056" y="188" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">draft / submit</text>
+<text x="1056" y="214" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="12">record.autoSubmit</text>
+<rect x="60" y="300" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#d0d7de" stroke-width="2"/>
+<text x="144" y="338" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">playback</text>
+<text x="144" y="364" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="12">speechSynthesis</text>
+<path d="M282 344h-48" stroke="#57606a" stroke-width="3"/>
+<path d="M246 337l-10 7 10 7" fill="none" stroke="#57606a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="288" y="300" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#d0d7de" stroke-width="2"/>
+<text x="372" y="338" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">talk/audio</text>
+<text x="372" y="364" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="12">audio cache</text>
+<path d="M510 344h-48" stroke="#57606a" stroke-width="3"/>
+<path d="M474 337l-10 7 10 7" fill="none" stroke="#57606a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="516" y="300" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#4B67B4" stroke-width="2"/>
+<text x="600" y="338" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">synthesize</text>
+<text x="600" y="364" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10.5">browser · edge-tts · piper</text>
+<path d="M738 344h-48" stroke="#57606a" stroke-width="3"/>
+<path d="M702 337l-10 7 10 7" fill="none" stroke="#57606a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="744" y="300" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#d0d7de" stroke-width="2"/>
+<text x="828" y="338" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">tts.engine</text>
+<text x="828" y="364" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="12">auto</text>
+<path d="M966 344h-48" stroke="#57606a" stroke-width="3"/>
+<path d="M930 337l-10 7 10 7" fill="none" stroke="#57606a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="972" y="300" width="168" height="88" rx="14" fill="#f6f8fa" stroke="#4B67B4" stroke-width="2"/>
+<text x="1056" y="338" fill="#1f2328" text-anchor="middle" font-family="ui-monospace,monospace" font-size="16" font-weight="700">speak</text>
+<text x="1056" y="364" fill="#57606a" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10.5">tool call · audioPath</text>
+<path d="M1056 238v62" stroke="#4B67B4" stroke-width="3"/>
+<path d="M1049 288l7 10 7-10" fill="none" stroke="#4B67B4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1044" y="274" fill="#57606a" text-anchor="end" font-family="ui-monospace,monospace" font-size="13">agent turn</text>
+<path d="M144 300v-52" stroke="#4B67B4" stroke-width="2" stroke-dasharray="5 5"/>
+<path d="M137 248l7 -10 7 10" fill="none" stroke="#4B67B4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="156" y="274" fill="#57606a" font-family="ui-monospace,monospace" font-size="13">talk/interrupt</text>
+<text x="60" y="438" fill="#57606a" font-family="ui-monospace,monospace" font-size="13">tts.export.dir · speech-&lt;stamp&gt;-&lt;token&gt;.mp3|.wav · maxFiles · maxAgeMinutes</text>
+<text x="1140" y="438" fill="#57606a" text-anchor="end" font-family="ui-monospace,monospace" font-size="13">announce.* · agent/status · agent/error · approval/request</text>
+</svg>
