@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-flow-dark.svg">
-  <img src="docs/assets/dsh-talk-flow-light.svg" width="100%" alt="Bucle de voz de dsh-talk: micrófono del compositor → talk/transcribe → FunASR / whisper.cpp; herramienta speak → tts.engine → edge-tts / piper / voz del navegador → talk/audio; al empezar a hablar se detiene la reproducción mediante talk/interrupt">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-hero-en-dark.webp">
+  <img src="docs/assets/dsh-talk-hero-en-light.webp" width="100%" alt="Bucle de voz de dsh-talk: el micrófono del compositor graba (el VAD cierra la toma) y la transcripción vuelve al compositor; tras el turno del agente, speak() lee la respuesta con piper / edge-tts / la voz del navegador, exporta el audio local y devuelve su audioPath, y tu voz interrumpe la reproducción">
 </picture>
 
 # dsh-talk
@@ -37,6 +37,13 @@ dsh plugin --profile <name> add dsh-talk
 ## Qué es
 
 `dsh-talk` añade las dos mitades de la voz a DeepSeek Harness. En la entrada, el botón de micrófono junto al compositor graba, y Web Speech del navegador, un servidor HTTP FunASR o un `whisper.cpp` local convierten el audio en texto que rellena el borrador o lo envía. En la salida, el agente llama a la herramienta `speak` y la voz del navegador, `edge-tts` o `piper` convierten el texto en sonido. El fin de turno, las aprobaciones pendientes y los errores pueden anunciarse automáticamente, y en cuanto empiezas a hablar se detiene la reproducción actual: no hace falta ninguna cuenta en la nube y los motores locales pueden funcionar totalmente sin conexión.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-flow-v5-dark.svg">
+  <img src="docs/assets/dsh-talk-flow-v5-light.svg" width="100%" alt="Bucle de voz bidireccional de dsh-talk: la toma del navegador (micrófono, MediaRecorder + VAD) cruza la puerta talk/transcribe hacia la escalera de motores del host (FunASR → whisper.cpp → Web Speech del navegador) y la transcripción vuelve como borrador; la bisagra agent turn entrega el mensaje a speak() y a los tres eventos de anuncio; la escalera TTS espejo (piper → edge-tts → voz del navegador) escribe la caché y el directorio de exportación acotado, y la reproducción vuelve por talk/audio; el raíl de interrupción cierra el bucle a la izquierda y la escritura de ajustes corre por debajo">
+</picture>
+
+*Estructura: una frontera navegador / host y dos canales opuestos — la voz de entrada cruza `talk/transcribe` hacia la escalera de motores del host (FunASR → whisper.cpp → Web Speech del navegador) y la transcripción vuelve como borrador; la bisagra `agent turn` la entrega a `speak()` y a los tres eventos de anuncio; la salida recorre la escalera TTS (piper → edge-tts → voz del navegador) hasta la caché y el directorio de exportación acotado, y vuelve a la reproducción por `talk/audio`; el raíl de interrupción cierra el bucle a la izquierda y la escritura de ajustes corre por debajo.*
 
 ## Instalación en tres pasos
 
@@ -356,7 +363,7 @@ pnpm run check:readmes          # consistencia de los README en cinco idiomas
 pnpm pack           # el tarball publicado
 ```
 
-Las imágenes del README las genera [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Python + Pillow), que escribe el par claro/oscuro `docs/assets/dsh-talk-flow-{light,dark}.svg` y se puede volver a ejecutar sin riesgo.
+Las imágenes del README las genera [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Python + Pillow para el hero, SVG escrito a mano para el mapa de estructura): `docs/assets/dsh-talk-hero-{zh,en}-{light,dark}.webp` y `docs/assets/dsh-talk-flow-v5-{light,dark}.svg`, y se puede volver a ejecutar sin riesgo.
 
 Topics: `dsh`, `dsh-plugin`, `deepseek-harness`, `deepseek`, `cordis`, `voice`, `speech`, `tts`, `stt`, `speech-to-text`, `text-to-speech`, `microphone`
 

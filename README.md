@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-flow-dark.svg">
-  <img src="docs/assets/dsh-talk-flow-light.svg" width="100%" alt="dsh-talk 语音环路：输入框麦克风 → talk/transcribe → FunASR / whisper.cpp；speak 工具 → tts.engine → edge-tts / piper / 浏览器语音 → talk/audio；开始说话经 talk/interrupt 打断播报">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-hero-zh-dark.webp">
+  <img src="docs/assets/dsh-talk-hero-zh-light.webp" width="100%" alt="dsh-talk 语音闭环：按下输入框麦克风录音、VAD 自动收尾，转写落回输入框；agent 回合之后 speak() 用 piper / edge-tts / 浏览器语音朗读，本地合成的音频落盘并以 audioPath 返回；你一开口说话就打断播放">
 </picture>
 
 # dsh-talk
@@ -37,6 +37,13 @@ dsh plugin --profile <name> add dsh-talk
 ## 它是什么
 
 `dsh-talk` 给 DeepSeek Harness 补上声音的两端。输入端：输入框旁的麦克风按钮录音，浏览器 Web Speech、FunASR HTTP 服务或本地 `whisper.cpp` 把话转成文字，回填草稿或直接提交。输出端：agent 调用 `speak` 工具朗读回复，浏览器语音、`edge-tts` 或 `piper` 把文字变成声音。回合完成、待审批、出错这三类事件也能自动播报，而你一开口说话就会打断正在播放的语音——整个过程不需要云端账号，本地引擎可以全程离线。
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-flow-v5-dark.svg">
+  <img src="docs/assets/dsh-talk-flow-v5-light.svg" width="100%" alt="dsh-talk 双向语音环路：浏览器侧的麦克风与 MediaRecorder + VAD 经 talk/transcribe 边界进入宿主引擎阶梯（FunASR → whisper.cpp → 浏览器 Web Speech），转写回填草稿；中段 agent turn 铰链把消息交给 speak() 与三类事件播报；宿主侧 TTS 阶梯（piper → edge-tts → 浏览器语音）写入缓存与有界导出目录，再经 talk/audio 回到浏览器播放；左缘是 talk/interrupt 回边，底部是设置写回">
+</picture>
+
+*结构：一条浏览器 / 宿主边界、两段反向通道 —— 上行话音经 `talk/transcribe` 进入宿主引擎阶梯（FunASR → whisper.cpp → 浏览器 Web Speech），转写回填草稿；中段 `agent turn` 铰链把消息交给 `speak()` 与三类事件播报；下行沿 TTS 阶梯（piper → edge-tts → 浏览器语音）落进缓存与有界导出目录，再由 `talk/audio` 回到播放；左缘是 `talk/interrupt` 回边，底部是设置写回。*
 
 ## 三步上手
 
@@ -355,7 +362,7 @@ pnpm run check:readmes          # 五语 README 一致性
 pnpm pack           # 发布用 tarball
 ```
 
-配图由 [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) 程序化生成（Python + Pillow），产出 `docs/assets/dsh-talk-flow-{light,dark}.svg` 双版，可重复执行。
+配图由 [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) 程序化生成（Python + Pillow 画 hero，手写 SVG 画结构图），产出 `docs/assets/dsh-talk-hero-{zh,en}-{light,dark}.webp` 与 `docs/assets/dsh-talk-flow-v5-{light,dark}.svg`，可重复执行。
 
 Topics：`dsh`, `dsh-plugin`, `deepseek-harness`, `deepseek`, `cordis`, `voice`, `speech`, `tts`, `stt`, `speech-to-text`, `text-to-speech`, `microphone`
 

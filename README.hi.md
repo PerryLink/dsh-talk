@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-flow-dark.svg">
-  <img src="docs/assets/dsh-talk-flow-light.svg" width="100%" alt="dsh-talk वॉइस लूप: कंपोज़र माइक → talk/transcribe → FunASR / whisper.cpp; speak टूल → tts.engine → edge-tts / piper / ब्राउज़र वॉइस → talk/audio; बोलना शुरू करने पर talk/interrupt से प्लेबैक रुकता है">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-hero-en-dark.webp">
+  <img src="docs/assets/dsh-talk-hero-en-light.webp" width="100%" alt="dsh-talk वॉइस लूप: कंपोज़र माइक रिकॉर्ड करता है (VAD टेक समाप्त करता है) और ट्रांसक्रिप्ट कंपोज़र में लौटता है; एजेंट टर्न के बाद speak() उत्तर को piper / edge-tts / ब्राउज़र वॉइस से पढ़ता है, स्थानीय रूप से बना ऑडियो एक्सपोर्ट करके उसका audioPath देता है, और आपकी आवाज़ प्लेबैक रोक देती है">
 </picture>
 
 # dsh-talk
@@ -37,6 +37,13 @@ dsh plugin --profile <name> add dsh-talk
 ## यह क्या है
 
 `dsh-talk` DeepSeek Harness में आवाज़ के दोनों सिरे जोड़ता है। इनपुट की ओर, कंपोज़र के पास का माइक बटन रिकॉर्ड करता है, और ब्राउज़र का Web Speech, कोई FunASR HTTP सर्वर या लोकल `whisper.cpp` उस ऑडियो को टेक्स्ट बनाता है जो ड्राफ़्ट भरता है या सीधे सबमिट करता है। आउटपुट की ओर, एजेंट `speak` टूल कॉल करता है और ब्राउज़र वॉइस, `edge-tts` या `piper` टेक्स्ट को आवाज़ बनाते हैं। टर्न पूरा होना, लंबित अनुमोदन और त्रुटियाँ अपने आप बोलकर बताई जा सकती हैं, और जैसे ही आप बोलना शुरू करते हैं चालू प्लेबैक रुक जाता है — किसी क्लाउड खाते की ज़रूरत नहीं, और लोकल इंजन पूरी तरह ऑफ़लाइन चल सकते हैं।
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-flow-v5-dark.svg">
+  <img src="docs/assets/dsh-talk-flow-v5-light.svg" width="100%" alt="dsh-talk दो-तरफ़ा वॉइस लूप: ब्राउज़र की टेक (माइक, MediaRecorder + VAD) talk/transcribe द्वार से होस्ट इंजन सीढ़ी (FunASR → whisper.cpp → ब्राउज़र Web Speech) में जाती है और ट्रांसक्रिप्ट ड्राफ़्ट के रूप में लौटती है; agent turn हिंज संदेश को speak() और तीन घटना-घोषणाओं तक पहुँचाता है; समानांतर TTS सीढ़ी (piper → edge-tts → ब्राउज़र वॉइस) कैश और सीमित एक्सपोर्ट निर्देशिका लिखती है, और प्लेबैक talk/audio से लौटता है; बाएँ किनारे का interrupt रेल लूप बंद करता है और नीचे सेटिंग्स राइट-बैक चलता है">
+</picture>
+
+*संरचना: एक ब्राउज़र / होस्ट सीमा और दो विपरीत चैनल — बोली जाने वाली आवाज़ `talk/transcribe` से होस्ट इंजन सीढ़ी (FunASR → whisper.cpp → ब्राउज़र Web Speech) में जाती है और ट्रांसक्रिप्ट ड्राफ़्ट के रूप में लौटती है; बीच का `agent turn` हिंज उसे `speak()` और तीन घटना-घोषणाओं तक पहुँचाता है; आउटपुट TTS सीढ़ी (piper → edge-tts → ब्राउज़र वॉइस) से कैश और सीमित एक्सपोर्ट निर्देशिका तक जाता है, फिर `talk/audio` से प्लेबैक पर लौटता है; बाएँ किनारे का interrupt रेल लूप बंद करता है और नीचे सेटिंग्स राइट-बैक चलता है।*
 
 ## तीन चरणों में शुरुआत
 
@@ -356,7 +363,7 @@ pnpm run check:readmes          # पाँच भाषाओं के README 
 pnpm pack           # प्रकाशित tarball
 ```
 
-README की तस्वीरें [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) (Python + Pillow) से बनती हैं, जो हल्का/गहरा जोड़ा `docs/assets/dsh-talk-flow-{light,dark}.svg` लिखता है और दोबारा चलाना सुरक्षित है।
+README की तस्वीरें [`scripts/gen-readme-assets.py`](scripts/gen-readme-assets.py) से बनती हैं (hero के लिए Python + Pillow, संरचना-चित्र के लिए हाथ से लिखा SVG): `docs/assets/dsh-talk-hero-{zh,en}-{light,dark}.webp` और `docs/assets/dsh-talk-flow-v5-{light,dark}.svg`, दोबारा चलाना सुरक्षित है।
 
 Topics: `dsh`, `dsh-plugin`, `deepseek-harness`, `deepseek`, `cordis`, `voice`, `speech`, `tts`, `stt`, `speech-to-text`, `text-to-speech`, `microphone`
 
