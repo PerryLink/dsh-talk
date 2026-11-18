@@ -9,7 +9,7 @@
 
 **Pulsa el micrófono y habla; la respuesta se lee en voz alta y, en cuanto empiezas a hablar, la reproducción se detiene.**
 
-El bucle de sesión voice-first para DeepSeek Harness: la voz se convierte en texto del compositor, la herramienta `speak` lee las respuestas, los turnos completados, las aprobaciones pendientes y los errores se anuncian, y todos los motores pueden quedarse en tu propia máquina.
+El bucle de sesión voice-first para DeepSeek Harness: la voz se convierte en texto del compositor, la herramienta `dsh-v0.2.2-rc.4`（2026-11-18）；`speak` lee las respuestas, los turnos completados, las aprobaciones pendientes y los errores se anuncian, y todos los motores pueden quedarse en tu propia máquina.
 
 [Instalar](#instalación-en-tres-pasos) · [Configuración](#configuración) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
 
@@ -36,7 +36,7 @@ dsh plugin --profile <name> add dsh-talk
 
 ## Qué es
 
-`dsh-talk` añade las dos mitades de la voz a DeepSeek Harness. En la entrada, el botón de micrófono junto al compositor graba, y Web Speech del navegador, un servidor HTTP FunASR o un `whisper.cpp` local convierten el audio en texto que rellena el borrador o lo envía. En la salida, el agente llama a la herramienta `speak` y la voz del navegador, `edge-tts` o `piper` convierten el texto en sonido. El fin de turno, las aprobaciones pendientes y los errores pueden anunciarse automáticamente, y en cuanto empiezas a hablar se detiene la reproducción actual: no hace falta ninguna cuenta en la nube y los motores locales pueden funcionar totalmente sin conexión.
+`dsh-v0.2.2-rc.4`（2026-11-18）；`dsh-talk` añade las dos mitades de la voz a DeepSeek Harness. En la entrada, el botón de micrófono junto al compositor graba, y Web Speech del navegador, un servidor HTTP FunASR o un `whisper.cpp` local convierten el audio en texto que rellena el borrador o lo envía. En la salida, el agente llama a la herramienta `speak` y la voz del navegador, `edge-tts` o `piper` convierten el texto en sonido. El fin de turno, las aprobaciones pendientes y los errores pueden anunciarse automáticamente, y en cuanto empiezas a hablar se detiene la reproducción actual: no hace falta ninguna cuenta en la nube y los motores locales pueden funcionar totalmente sin conexión.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-flow-v5-dark.svg">

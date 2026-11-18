@@ -76,6 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.30] - 2026-11-18
+
 ### Added
 
 - **Audio file export.** Every utterance synthesized by a local engine (`edge-tts`,

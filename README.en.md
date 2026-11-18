@@ -9,7 +9,7 @@
 
 **Press the mic and speak; the reply is spoken back — and the moment you start talking, playback stops.**
 
-The voice-first session loop for DeepSeek Harness: speech becomes composer text, the `speak` tool reads replies aloud, turn completion / pending approvals / errors are announced, and every engine can stay on your own machine.
+The voice-first session loop for DeepSeek Harness: speech becomes composer text, the `dsh-v0.2.2-rc.4`（2026-11-18）；`speak` tool reads replies aloud, turn completion / pending approvals / errors are announced, and every engine can stay on your own machine.
 
 [Install](#three-step-setup) · [Configuration](#configuration) · [FAQ](#faq) · [简体中文](README.md) · [English](README.en.md) · [Español](README.es.md) · [Português](README.pt.md) · [हिन्दी](README.hi.md)
 
@@ -36,7 +36,7 @@ dsh plugin --profile <name> add dsh-talk
 
 ## What it is
 
-`dsh-talk` adds both halves of voice to DeepSeek Harness. On the input side, the mic button next to the composer records, and the browser's Web Speech, a FunASR HTTP server, or a local `whisper.cpp` turns the audio into text that fills the draft or submits it. On the output side, the agent calls the `speak` tool and the browser voice, `edge-tts`, or `piper` turns the text into sound. Turn completion, pending approvals, and errors can be announced automatically, and the moment you start talking the current playback stops — no cloud account is required and local engines can run fully offline.
+`dsh-v0.2.2-rc.4`（2026-11-18）；`dsh-talk` adds both halves of voice to DeepSeek Harness. On the input side, the mic button next to the composer records, and the browser's Web Speech, a FunASR HTTP server, or a local `whisper.cpp` turns the audio into text that fills the draft or submits it. On the output side, the agent calls the `speak` tool and the browser voice, `edge-tts`, or `piper` turns the text into sound. Turn completion, pending approvals, and errors can be announced automatically, and the moment you start talking the current playback stops — no cloud account is required and local engines can run fully offline.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dsh-talk-flow-v5-dark.svg">
