@@ -335,7 +335,7 @@ Evidencia estática: `dsh-plugin-doctor` K10–K13 informa `pass` en todas las c
 
 | Superficie | Estado |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-alpha.1` (adaptado el 2026-09-24: tercera cláusula peer + `engines.dsh` + `manifestVersion: 1`, y el workflow Compat mensual anclado a esa línea); cadena completa de puertas en verde el 2026-09-24 (reglas duales de typecheck, 86 tests, build, self-contained, artifacts, pack). Línea npm de desarrollo/pruebas `0.1.7-rc.2`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0`. |
+| Harness | DeepSeek Harness `dsh-v0.2.2-rc.4` (adaptado el 2026-11-18: tercera cláusula peer + `engines.dsh` + `manifestVersion: 1`, y el workflow Compat mensual anclado a esa línea); cadena completa de puertas en verde el 2026-11-18 (reglas duales de typecheck, 86 tests, build, self-contained, artifacts, pack). Línea npm de desarrollo/pruebas `0.1.7-rc.2`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0 || >=0.2.2-0 <0.3.0`. |
 | Node | `^22.19.0 \|\| >=24.9.0` |
 | Navegador | Web Speech + MediaRecorder (mejor en Chrome/Edge); motores de transcripción/TTS del host para el resto |
 

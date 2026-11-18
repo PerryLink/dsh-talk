@@ -335,7 +335,7 @@ Error: dsh-talk: speak text must not be empty
 
 | सतह | स्थिति |
 |---|---|
-| Harness | DeepSeek Harness `dsh-v0.2.1-alpha.1` (2026-09-24 को अनुकूलित: तीसरा peer खंड + `engines.dsh` + `manifestVersion: 1`, और मासिक Compat workflow उसी लाइन पर स्थिर); पूरी गेट श्रृंखला 2026-09-24 को हरी (दोनों typecheck रूलर, 86 टेस्ट, build, self-contained, artifacts, pack)। npm डेव/टेस्ट लाइन `0.1.7-rc.2`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0`। |
+| Harness | DeepSeek Harness `dsh-v0.2.2-rc.4` (2026-11-18 को अनुकूलित: तीसरा peer खंड + `engines.dsh` + `manifestVersion: 1`, और मासिक Compat workflow उसी लाइन पर स्थिर); पूरी गेट श्रृंखला 2026-11-18 को हरी (दोनों typecheck रूलर, 86 टेस्ट, build, self-contained, artifacts, pack)। npm डेव/टेस्ट लाइन `0.1.7-rc.2`, peers `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0 || >=0.2.2-0 <0.3.0`। |
 | Node | `^22.19.0 \|\| >=24.9.0` |
 | ब्राउज़र | Web Speech + MediaRecorder (Chrome/Edge सबसे अच्छे); बाकी के लिए होस्ट ट्रांसक्रिप्शन/TTS इंजन |
 

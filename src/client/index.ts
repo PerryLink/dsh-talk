@@ -1,7 +1,7 @@
 /**
  * `dsh-talk`, browser half: mounts the `talk` Remote contribution, registers
  * the composer microphone button into `conversation.input.left`, and the
- * settings tab (`settings.plugins.tab`, id `talk`). All data arrives through
+ * settings tab (`plugins.tab`, id `talk`). All data arrives through
  * the `remote.talk` namespace; the draft/send bindings come from the
  * conversation input face resolved for the session scope.
  *
@@ -14,9 +14,11 @@ import type { Context } from '@deepseek-ai/cordis'
 // the 0.1.1-rc.2 line and the 0.1.2-alpha checkout.
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
-// Type-only: pulls the 'settings.plugins.tab' SlotMap declaration into this
+// Type-only: pulls the 'plugins.tab' SlotMap declaration into this
 // program so the tab registration typechecks against the real declaration.
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
+// Type-only: pulls the 'plugins.tab' SlotMap declaration from the Plugins page.
+import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 // Type-only: pulls the 'conversation.input.left' SlotMap declaration in.
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
@@ -130,8 +132,8 @@ export async function apply(ctx: Context): Promise<void> {
       inject: (): TalkMicInjected => ({ status, interrupt, transcribe, audio, setDraft, send, forSession }),
     }, TalkMicButton))
 
-    slots.inject('settings.plugins.tab', () => slots.register({
-      name: 'settings.plugins.tab',
+    slots.inject('plugins.tab', () => slots.register({
+      name: 'plugins.tab',
       id: 'talk',
       order: 50,
       label: () => t('tab'),

@@ -1,5 +1,5 @@
 /**
- * The talk settings tab (id `talk` in `settings.plugins.tab`): STT/TTS
+ * The talk settings tab (id `talk` in `plugins.tab`): STT/TTS
  * engine and language selects, announcement switches, the speak-to-interrupt
  * toggle, and an append-only save through `talk/applySettings`.
  *
@@ -20,7 +20,7 @@ export interface TalkSettingsTabInjected {
 
 /** Full component props assembled by the Settings slot renderer. */
 export type TalkSettingsTabProps =
-  PropsRuntime<'settings.plugins.tab'>
+  PropsRuntime<'plugins.tab'>
   & PropsLocale<'settings.talk'>
   & InjectFace<TalkSettingsTabInjected>
 
