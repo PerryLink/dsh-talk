@@ -36,6 +36,10 @@ dsh plugin --profile <name> add dsh-talk
 
 ## 它是什么
 
+![dsh-talk 真实终端运行](docs/assets/dsh-talk-demo.gif)
+
+*本仓库一次真实运行的动图回放。*
+
 `dsh-v0.2.2-rc.4`（2026-11-18）；`dsh-talk` 给 DeepSeek Harness 补上声音的两端。输入端：输入框旁的麦克风按钮录音，浏览器 Web Speech、FunASR HTTP 服务或本地 `whisper.cpp` 把话转成文字，回填草稿或直接提交。输出端：agent 调用 `speak` 工具朗读回复，浏览器语音、`edge-tts` 或 `piper` 把文字变成声音。回合完成、待审批、出错这三类事件也能自动播报，而你一开口说话就会打断正在播放的语音——整个过程不需要云端账号，本地引擎可以全程离线。
 
 <picture>

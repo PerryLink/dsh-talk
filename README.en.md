@@ -148,6 +148,10 @@ browser                                host
 
 ### Examples
 
+![dsh-talk: real terminal run](docs/assets/dsh-talk-demo.gif)
+
+*Animated replay of a real run recorded in this repository.*
+
 These are the real surfaces; the settings tab and mic button are the UI entry points.
 
 **Detailed example** — command `speak`, input:

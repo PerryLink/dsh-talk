@@ -43,6 +43,11 @@ dsh plugin --profile <name> add dsh-talk
   <img src="docs/assets/dsh-talk-flow-v5-light.svg" width="100%" alt="Laço de voz bidirecional do dsh-talk: a tomada do navegador (microfone, MediaRecorder + VAD) cruza o portão talk/transcribe para a escada de motores do host (FunASR → whisper.cpp → Web Speech do navegador) e a transcrição volta como rascunho; a dobradiça agent turn entrega a mensagem a speak() e aos três eventos de anúncio; a escada TTS espelhada (piper → edge-tts → voz do navegador) grava o cache e o diretório de exportação limitado, e a reprodução volta por talk/audio; o trilho de interrupção fecha o laço à esquerda e a escrita de ajustes corre por baixo">
 </picture>
 
+![dsh-talk: execução real de terminal](docs/assets/dsh-talk-demo.gif)
+
+*Repetição animada de uma execução real registrada neste repositório.*
+
+
 *Estrutura: uma fronteira navegador / host e dois canais opostos — a fala de entrada cruza `talk/transcribe` para a escada de motores do host (FunASR → whisper.cpp → Web Speech do navegador) e a transcrição volta como rascunho; a dobradiça `agent turn` entrega a mensagem a `speak()` e aos três eventos de anúncio; a saída percorre a escada TTS (piper → edge-tts → voz do navegador) até o cache e o diretório de exportação limitado, e volta à reprodução por `talk/audio`; o trilho de interrupção fecha o laço à esquerda e a escrita de ajustes corre por baixo.*
 
 ## Instalação em três passos

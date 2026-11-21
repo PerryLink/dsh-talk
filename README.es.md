@@ -43,6 +43,11 @@ dsh plugin --profile <name> add dsh-talk
   <img src="docs/assets/dsh-talk-flow-v5-light.svg" width="100%" alt="Bucle de voz bidireccional de dsh-talk: la toma del navegador (micrófono, MediaRecorder + VAD) cruza la puerta talk/transcribe hacia la escalera de motores del host (FunASR → whisper.cpp → Web Speech del navegador) y la transcripción vuelve como borrador; la bisagra agent turn entrega el mensaje a speak() y a los tres eventos de anuncio; la escalera TTS espejo (piper → edge-tts → voz del navegador) escribe la caché y el directorio de exportación acotado, y la reproducción vuelve por talk/audio; el raíl de interrupción cierra el bucle a la izquierda y la escritura de ajustes corre por debajo">
 </picture>
 
+![dsh-talk: ejecución real de terminal](docs/assets/dsh-talk-demo.gif)
+
+*Repetición animada de una ejecución real registrada en este repositorio.*
+
+
 *Estructura: una frontera navegador / host y dos canales opuestos — la voz de entrada cruza `talk/transcribe` hacia la escalera de motores del host (FunASR → whisper.cpp → Web Speech del navegador) y la transcripción vuelve como borrador; la bisagra `agent turn` la entrega a `speak()` y a los tres eventos de anuncio; la salida recorre la escalera TTS (piper → edge-tts → voz del navegador) hasta la caché y el directorio de exportación acotado, y vuelve a la reproducción por `talk/audio`; el raíl de interrupción cierra el bucle a la izquierda y la escritura de ajustes corre por debajo.*
 
 ## Instalación en tres pasos
