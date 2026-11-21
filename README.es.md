@@ -374,7 +374,7 @@ Topics: `dsh`, `dsh-plugin`, `deepseek-harness`, `deepseek`, `cordis`, `voice`, 
 
 ## Familia y agradecimientos
 
-Este proyecto forma parte de la familia de plugins de DeepSeek Harness de [PerryLink](https://github.com/PerryLink) (95 plugins, todos Apache-2.0). Si te resulta útil, **una estrella ayuda a que la siguiente persona lo encuentre**; no hay nada bloqueado tras ella.
+Este proyecto forma parte de la familia de plugins de DeepSeek Harness de [PerryLink](https://github.com/PerryLink) (99 plugins, todos Apache-2.0). Si te resulta útil, **una estrella ayuda a que la siguiente persona lo encuentre**; no hay nada bloqueado tras ella.
 
 - [@PerryLink](https://github.com/PerryLink) — creador y mantenedor: canalización de habla, motores de voz, grabador de micrófono, anuncios de eventos, unidad de proyección y la documentación en cinco idiomas.
 - [@Mo-Mia](https://github.com/Mo-Mia) — privacidad/compatibilidad de Web Speech, acciones de entrada del compositor, fallback de idioma, dictado continuo, proyección `talk:speech` y propuestas de diseño de TTS del navegador (#2–#9); varias influyeron en la superficie de ajustes actual.

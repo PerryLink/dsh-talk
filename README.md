@@ -372,7 +372,7 @@ Topics：`dsh`, `dsh-plugin`, `deepseek-harness`, `deepseek`, `cordis`, `voice`,
 
 ## 家族与致谢
 
-本项目是 [PerryLink](https://github.com/PerryLink) 维护的 DeepSeek Harness 插件家族成员（95 个，全部 Apache-2.0）。如果这个插件帮到了你，**给个 star**——它不解锁任何功能，但会让下一个人更容易找到它。
+本项目是 [PerryLink](https://github.com/PerryLink) 维护的 DeepSeek Harness 插件家族成员（99 个，全部 Apache-2.0）。如果这个插件帮到了你，**给个 star**——它不解锁任何功能，但会让下一个人更容易找到它。
 
 - [@PerryLink](https://github.com/PerryLink) —— 创建者与维护者：朗读管线、语音引擎、麦克风录音、事件播报、投影单元与五语文档。
 - [@Mo-Mia](https://github.com/Mo-Mia) —— Web Speech 隐私/兼容性、输入框动作、语言回退、连续听写、`talk:speech` 投影与浏览器 TTS 设计建议（#2–#9）；其中若干条影响了当前的设置面。
