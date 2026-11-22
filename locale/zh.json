@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "语音对话",
+    "description": "DeepSeek Harness 的 voice-first 会话闭环：语音转写回填输入框、speak 工具让 agent 朗读回答，回合完成/待审批/出错都有语音播报；语音引擎可全部留在本机。"
+  }
+}

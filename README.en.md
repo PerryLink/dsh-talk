@@ -7,6 +7,8 @@
 
 # dsh-talk
 
+Current version `0.3.32`.
+
 **Press the mic and speak; the reply is spoken back — and the moment you start talking, playback stops.**
 
 The voice-first session loop for DeepSeek Harness: speech becomes composer text, the, `speak` tool reads replies aloud, turn completion / pending approvals / errors are announced, and every engine can stay on your own machine.
